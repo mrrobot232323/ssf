@@ -1,33 +1,46 @@
+import Colors from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Tabs } from 'expo-router';
 import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import CustomTabBar from '@/components/custom-tab-bar';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="boats"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Boats',
+        }}
+      />
+      <Tabs.Screen
+        name="new-lot"
+        options={{
+          title: 'New Lot',
+        }}
+      />
+      <Tabs.Screen
+        name="daily"
+        options={{
+          title: 'Daily',
+        }}
+      />
+      <Tabs.Screen
+        name="weekly"
+        options={{
+          title: 'Weekly',
         }}
       />
     </Tabs>
