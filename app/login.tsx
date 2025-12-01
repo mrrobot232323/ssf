@@ -12,8 +12,22 @@ import {
     TouchableOpacity, 
     View, 
     Image,
-    SafeAreaView 
+    SafeAreaView,
+    Dimensions
 } from 'react-native';
+
+const { width } = Dimensions.get('window');
+
+// Dark Theme Palette
+const theme = {
+    background: '#0B0B15',    // Main Dark Background
+    textMain: '#FFFFFF',      // White
+    textSecondary: '#9CA3AF', // Cool Grey
+    accent: '#246BFD',        // AquaLedger Blue
+    surface: '#181822',       // Card/Surface Color
+    inputBg: '#13131A',       // Slightly darker for inputs
+    border: '#2A2A35'         // Border Color
+};
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -27,7 +41,7 @@ export default function Login() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar style="dark" />
+            <StatusBar style="light" />
             
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -40,11 +54,11 @@ export default function Login() {
                     {/* Header: Back Arrow Only */}
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+                            <Ionicons name="arrow-back" size={24} color="#FFF" />
                         </TouchableOpacity>
                     </View>
 
-                    {/* Illustration Area - Now Circular */}
+                    {/* Illustration Area */}
                     <View style={styles.illustrationContainer}>
                         <View style={styles.circleContainer}>
                             <Image 
@@ -52,7 +66,12 @@ export default function Login() {
                                 style={styles.illustration}
                                 resizeMode="cover"
                             />
+                            {/* Decorative Rings */}
+                            <View style={styles.ring1} />
+                            <View style={styles.ring2} />
                         </View>
+                        <Text style={styles.titleText}>Welcome Back!</Text>
+                        <Text style={styles.subtitleText}>Please log in to continue managing your fleet.</Text>
                     </View>
 
                     {/* Form Section */}
@@ -64,7 +83,7 @@ export default function Login() {
                             <TextInput
                                 style={styles.input}
                                 placeholder="divyesh.b@gmail.com"
-                                placeholderTextColor="#C4C4C4"
+                                placeholderTextColor="#666"
                                 value={email}
                                 onChangeText={setEmail}
                                 autoCapitalize="none"
@@ -79,7 +98,7 @@ export default function Login() {
                                 <TextInput
                                     style={styles.passwordInput}
                                     placeholder="● ● ● ● ● ● ● ●"
-                                    placeholderTextColor="#C4C4C4"
+                                    placeholderTextColor="#666"
                                     secureTextEntry={!showPassword}
                                     value={password}
                                     onChangeText={setPassword}
@@ -91,12 +110,12 @@ export default function Login() {
                                     <Ionicons 
                                         name={showPassword ? "eye-off-outline" : "eye-outline"} 
                                         size={20} 
-                                        color="#C4C4C4" 
+                                        color="#AAA" 
                                     />
                                 </TouchableOpacity>
                             </View>
                             
-                            {/* Forgot Password Moved Here */}
+                            {/* Forgot Password */}
                             <TouchableOpacity style={styles.forgotPasswordContainer}>
                                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                             </TouchableOpacity>
@@ -140,7 +159,7 @@ export default function Login() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.background,
     },
     keyboardView: {
         flex: 1,
@@ -155,37 +174,80 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 10,
         marginTop: 10,
     },
     backButton: {
-        padding: 4,
-        marginLeft: -4,
-         marginTop: 20,
+        padding: 8,
+        marginLeft: -8,
+        backgroundColor: theme.surface,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: theme.border,
     },
+    
+    // Illustration
     illustrationContainer: {
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 30,
     },
-    // New Circle Container Styles
     circleContainer: {
-        width: 180,
-        height: 180,
-        borderRadius: 90,
-        backgroundColor: '#F5F5F5', // Light grey background for the circle
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        backgroundColor: theme.surface,
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
-         marginTop: 20,
+        borderWidth: 1,
+        borderColor: theme.border,
+        zIndex: 5,
+        elevation: 10,
+        shadowColor: theme.accent,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+        marginBottom: 20,
     },
     illustration: {
         width: '100%',
         height: '100%',
     },
+    ring1: {
+        position: 'absolute',
+        width: '120%',
+        height: '120%',
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: 'rgba(36, 107, 253, 0.1)',
+        zIndex: -1,
+    },
+    ring2: {
+        position: 'absolute',
+        width: '145%',
+        height: '145%',
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: 'rgba(36, 107, 253, 0.05)',
+        zIndex: -2,
+    },
+    titleText: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: theme.textMain,
+        marginBottom: 6,
+    },
+    subtitleText: {
+        fontSize: 14,
+        color: theme.textSecondary,
+        textAlign: 'center',
+    },
+
+    // Form
     formContainer: {
         flex: 1,
-         marginTop: 20,
+        marginTop: 10,
     },
     inputGroup: {
         marginBottom: 20,
@@ -193,107 +255,114 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#1A1A1A',
-        marginBottom: 10,
+        color: theme.textSecondary,
+        marginBottom: 8,
     },
     input: {
         height: 52,
         borderWidth: 1,
-        borderColor: '#E8E8E8',
+        borderColor: theme.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         fontSize: 15,
-        color: '#1A1A1A',
-        backgroundColor: '#FFFFFF',
+        color: theme.textMain,
+        backgroundColor: theme.inputBg,
     },
     passwordContainer: {
         height: 52,
         borderWidth: 1,
-        borderColor: '#E8E8E8',
+        borderColor: theme.border,
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.inputBg,
     },
     passwordInput: {
         flex: 1,
         height: '100%',
         paddingHorizontal: 16,
         fontSize: 15,
-        color: '#1A1A1A',
+        color: theme.textMain,
     },
     eyeIcon: {
         padding: 10,
         marginRight: 6,
     },
-    // New Forgot Password Styles
+    
+    // Forgot Password
     forgotPasswordContainer: {
         alignSelf: 'flex-end',
         marginTop: 12,
     },
     forgotPasswordText: {
         fontSize: 13,
-        color: '#666666',
+        color: theme.accent,
         fontWeight: '600',
     },
+    
+    // Remember Me
     rememberMeContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 24,
     },
     rememberMeText: {
         fontSize: 14,
-        color: '#1A1A1A',
-        fontWeight: '600',
+        color: theme.textMain,
+        fontWeight: '500',
     },
     checkbox: {
         width: 24,
         height: 24,
         borderWidth: 2,
-        borderColor: '#1A1A1A',
+        borderColor: theme.border,
         borderRadius: 6,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: theme.inputBg,
     },
     checkboxChecked: {
-        backgroundColor: '#1A1A1A',
+        backgroundColor: theme.accent,
+        borderColor: theme.accent,
     },
+    
+    // Buttons
     loginButton: {
-        backgroundColor: '#1A1A1A',
+        backgroundColor: theme.accent,
         height: 56,
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 24,
-        marginTop: 20, // Increased top margin
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.1,
+        shadowColor: theme.accent,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
         shadowRadius: 12,
-        elevation: 5,
+        elevation: 8,
     },
     loginButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
+        letterSpacing: 0.5,
     },
+    
+    // Footer
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
     },
     footerText: {
-        color: '#C4C4C4',
+        color: theme.textSecondary,
         fontSize: 14,
         fontWeight: '500',
     },
     signUpText: {
-        color: '#1A1A1A', 
+        color: theme.textMain, 
         fontSize: 14,
         fontWeight: '700',
+        textDecorationLine: 'underline',
     },
 });
