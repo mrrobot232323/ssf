@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -15,13 +15,18 @@ import {
     SafeAreaView 
 } from 'react-native';
 
-export default function Login() {
+export default function SignUp() {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [rememberMe, setRememberMe] = useState(true);
+    const [agreed, setAgreed] = useState(false);
 
-    const handleLogin = () => {
+    const handleSignUp = () => {
+        if (!email || !password) {
+            alert("Please fill in all fields");
+            return;
+        }
         router.replace('/(tabs)');
     };
 
@@ -37,16 +42,23 @@ export default function Login() {
                     contentContainerStyle={styles.contentContainer}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Header: Back Arrow Only */}
+                    {/* Header: Back Arrow */}
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                             <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
                         </TouchableOpacity>
                     </View>
 
-                    {/* Illustration Area - Now Circular */}
+                    {/* Title Section */}
+                    <View style={styles.titleContainer}>
+                        <Text style={styles.mainTitle}>Let's Get Started</Text>
+                        <Text style={styles.subtitle}>Fill the form to continue</Text>
+                    </View>
+
+                    {/* Character Illustration (Preserved) */}
                     <View style={styles.illustrationContainer}>
                         <View style={styles.circleContainer}>
+                            {/* Using the same image style as Login for consistency */}
                             <Image 
                                 source={{ uri: 'https://cdn.dribbble.com/userupload/41849246/file/original-942c6a9ffac280bfc04190f0a60f3771.png?resize=800x600&vertical=center' }}
                                 style={styles.illustration}
@@ -55,12 +67,25 @@ export default function Login() {
                         </View>
                     </View>
 
-                    {/* Form Section */}
+                    {/* Form Fields */}
                     <View style={styles.formContainer}>
                         
+                        {/* Name Input (Kept from your code, styled like reference) */}
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Your Name</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="e.g. Lucy"
+                                placeholderTextColor="#C4C4C4"
+                                value={name}
+                                onChangeText={setName}
+                                autoCapitalize="words"
+                            />
+                        </View>
+
                         {/* Email Input */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Email Address</Text>
+                            <Text style={styles.label}>Your Email Address</Text>
                             <TextInput
                                 style={styles.input}
                                 placeholder="divyesh.b@gmail.com"
@@ -74,11 +99,11 @@ export default function Login() {
 
                         {/* Password Input */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Password</Text>
+                            <Text style={styles.label}>Choose a Password</Text>
                             <View style={styles.passwordContainer}>
                                 <TextInput
                                     style={styles.passwordInput}
-                                    placeholder="● ● ● ● ● ● ● ●"
+                                    placeholder="min. 8 characters"
                                     placeholderTextColor="#C4C4C4"
                                     secureTextEntry={!showPassword}
                                     value={password}
@@ -91,42 +116,53 @@ export default function Login() {
                                     <Ionicons 
                                         name={showPassword ? "eye-off-outline" : "eye-outline"} 
                                         size={20} 
-                                        color="#C4C4C4" 
+                                        color="#1A1A1A" 
                                     />
                                 </TouchableOpacity>
                             </View>
-                            
-                            {/* Forgot Password Moved Here */}
-                            <TouchableOpacity style={styles.forgotPasswordContainer}>
-                                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                            </TouchableOpacity>
                         </View>
 
-                        {/* Remember Me Row */}
-                        <View style={styles.rememberMeContainer}>
-                            <Text style={styles.rememberMeText}>Remember me next time</Text>
+                        {/* Terms of Use Checkbox */}
+                        <View style={styles.termsContainer}>
+                            <Text style={styles.termsText}>I agree with terms of use</Text>
                             <TouchableOpacity 
-                                onPress={() => setRememberMe(!rememberMe)}
-                                style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
+                                onPress={() => setAgreed(!agreed)}
+                                style={[styles.checkbox, agreed && styles.checkboxChecked]}
                             >
-                                {rememberMe && <Ionicons name="checkmark" size={14} color="#FFF" />}
+                                {agreed && <Ionicons name="checkmark" size={14} color="#FFF" />}
                             </TouchableOpacity>
                         </View>
 
-                        {/* Login Button */}
+                        {/* Sign Up Button */}
                         <TouchableOpacity 
-                            style={styles.loginButton} 
-                            onPress={handleLogin}
+                            style={styles.signUpButton} 
+                            onPress={handleSignUp}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.loginButtonText}>Log in</Text>
+                            <Text style={styles.signUpButtonText}>Sign up</Text>
+                        </TouchableOpacity>
+
+                        {/* Divider */}
+                        <View style={styles.dividerContainer}>
+                            <Text style={styles.dividerText}>OR</Text>
+                        </View>
+
+                        {/* Google Sign Up Button */}
+                        <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
+                            {/* Using FontAwesome for the G logo, colored manually */}
+                            <Image 
+                                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png' }}
+                                style={styles.googleIcon}
+                                resizeMode="contain"
+                            />
+                            <Text style={styles.googleButtonText}>Sign up with Google</Text>
                         </TouchableOpacity>
 
                         {/* Footer */}
                         <View style={styles.footer}>
-                            <Text style={styles.footerText}>Don't have an account? </Text>
-                            <TouchableOpacity onPress={() => router.push('/signup')}>
-                                <Text style={styles.signUpText}>Sign up</Text>
+                            <Text style={styles.footerText}>Already have an account? </Text>
+                            <TouchableOpacity onPress={() => router.push('/')}>
+                                <Text style={styles.signInText}>Log in</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -152,32 +188,41 @@ const styles = StyleSheet.create({
         paddingBottom: 30,
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
         marginBottom: 20,
         marginTop: 10,
+        alignItems: 'flex-start',
     },
     backButton: {
         padding: 4,
         marginLeft: -4,
-         marginTop: 20,
+    },
+    titleContainer: {
+        marginBottom: 20,
+    },
+    mainTitle: {
+        fontSize: 28,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 14,
+        color: '#8e8e93',
+        fontWeight: '400',
     },
     illustrationContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 30,
+        marginBottom: 24,
     },
-    // New Circle Container Styles
     circleContainer: {
-        width: 180,
-        height: 180,
-        borderRadius: 90,
-        backgroundColor: '#F5F5F5', // Light grey background for the circle
+        width: 120, // Smaller than Login to fit content
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#F5F5F5',
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
-         marginTop: 20,
     },
     illustration: {
         width: '100%',
@@ -185,16 +230,15 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         flex: 1,
-         marginTop: 20,
     },
     inputGroup: {
-        marginBottom: 20,
+        marginBottom: 16,
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700', // Bold label as per reference
         color: '#1A1A1A',
-        marginBottom: 10,
+        marginBottom: 8,
     },
     input: {
         height: 52,
@@ -226,26 +270,17 @@ const styles = StyleSheet.create({
         padding: 10,
         marginRight: 6,
     },
-    // New Forgot Password Styles
-    forgotPasswordContainer: {
-        alignSelf: 'flex-end',
-        marginTop: 12,
-    },
-    forgotPasswordText: {
-        fontSize: 13,
-        color: '#666666',
-        fontWeight: '600',
-    },
-    rememberMeContainer: {
+    termsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginTop: 4,
+        marginBottom: 24,
     },
-    rememberMeText: {
+    termsText: {
         fontSize: 14,
         color: '#1A1A1A',
-        fontWeight: '600',
+        fontWeight: '700',
     },
     checkbox: {
         width: 24,
@@ -259,40 +294,67 @@ const styles = StyleSheet.create({
     checkboxChecked: {
         backgroundColor: '#1A1A1A',
     },
-    loginButton: {
-        backgroundColor: '#1A1A1A',
+    signUpButton: {
+        backgroundColor: '#1A1A1A', // Black button
         height: 56,
-        borderRadius: 16,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 24,
-        marginTop: 20, // Increased top margin
+        marginBottom: 20,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    loginButtonText: {
+    signUpButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
+        fontWeight: '600',
+    },
+    dividerContainer: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    dividerText: {
+        fontSize: 12,
+        color: '#666666',
+        fontWeight: '600',
+    },
+    googleButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 56,
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
+        marginBottom: 24,
+    },
+    googleIcon: {
+        width: 20,
+        height: 20,
+        marginRight: 10,
+    },
+    googleButtonText: {
+        color: '#1A1A1A',
+        fontSize: 15,
         fontWeight: '600',
     },
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 10,
     },
     footerText: {
-        color: '#C4C4C4',
+        color: '#8e8e93',
         fontSize: 14,
         fontWeight: '500',
     },
-    signUpText: {
-        color: '#1A1A1A', 
+    signInText: {
+        color: '#1A1A1A',
         fontSize: 14,
         fontWeight: '700',
     },
