@@ -1,4 +1,4 @@
-import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -12,8 +12,22 @@ import {
     TouchableOpacity, 
     View, 
     Image,
-    SafeAreaView 
+    SafeAreaView,
+    Dimensions
 } from 'react-native';
+
+const { width } = Dimensions.get('window');
+
+// Dark Theme Palette
+const theme = {
+    background: '#0B0B15',    // Main Dark Background
+    textMain: '#FFFFFF',      // White
+    textSecondary: '#9CA3AF', // Cool Grey
+    accent: '#246BFD',        // AquaLedger Blue
+    surface: '#181822',       // Card/Surface Color
+    inputBg: '#13131A',       // Slightly darker for inputs
+    border: '#2A2A35'         // Border Color
+};
 
 export default function SignUp() {
     const [name, setName] = useState('');
@@ -32,7 +46,7 @@ export default function SignUp() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar style="dark" />
+            <StatusBar style="light" />
             
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -45,38 +59,35 @@ export default function SignUp() {
                     {/* Header: Back Arrow */}
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+                            <Ionicons name="arrow-back" size={24} color="#FFF" />
                         </TouchableOpacity>
                     </View>
 
-                    {/* Title Section */}
-                    <View style={styles.titleContainer}>
-                        <Text style={styles.mainTitle}>Let's Get Started</Text>
-                        <Text style={styles.subtitle}>Fill the form to continue</Text>
-                    </View>
-
-                    {/* Character Illustration (Preserved) */}
+                    {/* Illustration Area */}
                     <View style={styles.illustrationContainer}>
                         <View style={styles.circleContainer}>
-                            {/* Using the same image style as Login for consistency */}
                             <Image 
                                 source={{ uri: 'https://cdn.dribbble.com/userupload/41849246/file/original-942c6a9ffac280bfc04190f0a60f3771.png?resize=800x600&vertical=center' }}
                                 style={styles.illustration}
                                 resizeMode="cover"
                             />
+                            <View style={styles.ring1} />
+                            <View style={styles.ring2} />
                         </View>
+                        <Text style={styles.mainTitle}>Create Account</Text>
+                        <Text style={styles.subtitle}>Join us to manage your fleet efficiently.</Text>
                     </View>
 
                     {/* Form Fields */}
                     <View style={styles.formContainer}>
                         
-                        {/* Name Input (Kept from your code, styled like reference) */}
+                        {/* Name Input */}
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Your Name</Text>
                             <TextInput
                                 style={styles.input}
                                 placeholder="e.g. Lucy"
-                                placeholderTextColor="#C4C4C4"
+                                placeholderTextColor="#666"
                                 value={name}
                                 onChangeText={setName}
                                 autoCapitalize="words"
@@ -89,7 +100,7 @@ export default function SignUp() {
                             <TextInput
                                 style={styles.input}
                                 placeholder="divyesh.b@gmail.com"
-                                placeholderTextColor="#C4C4C4"
+                                placeholderTextColor="#666"
                                 value={email}
                                 onChangeText={setEmail}
                                 autoCapitalize="none"
@@ -104,7 +115,7 @@ export default function SignUp() {
                                 <TextInput
                                     style={styles.passwordInput}
                                     placeholder="min. 8 characters"
-                                    placeholderTextColor="#C4C4C4"
+                                    placeholderTextColor="#666"
                                     secureTextEntry={!showPassword}
                                     value={password}
                                     onChangeText={setPassword}
@@ -116,7 +127,7 @@ export default function SignUp() {
                                     <Ionicons 
                                         name={showPassword ? "eye-off-outline" : "eye-outline"} 
                                         size={20} 
-                                        color="#1A1A1A" 
+                                        color="#AAA" 
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -124,13 +135,15 @@ export default function SignUp() {
 
                         {/* Terms of Use Checkbox */}
                         <View style={styles.termsContainer}>
-                            <Text style={styles.termsText}>I agree with terms of use</Text>
                             <TouchableOpacity 
                                 onPress={() => setAgreed(!agreed)}
                                 style={[styles.checkbox, agreed && styles.checkboxChecked]}
                             >
                                 {agreed && <Ionicons name="checkmark" size={14} color="#FFF" />}
                             </TouchableOpacity>
+                            <Text style={styles.termsText}>
+                                I agree with <Text style={styles.linkText}>Terms of Use</Text> & <Text style={styles.linkText}>Privacy Policy</Text>
+                            </Text>
                         </View>
 
                         {/* Sign Up Button */}
@@ -144,12 +157,13 @@ export default function SignUp() {
 
                         {/* Divider */}
                         <View style={styles.dividerContainer}>
+                            <View style={styles.dividerLine} />
                             <Text style={styles.dividerText}>OR</Text>
+                            <View style={styles.dividerLine} />
                         </View>
 
                         {/* Google Sign Up Button */}
                         <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
-                            {/* Using FontAwesome for the G logo, colored manually */}
                             <Image 
                                 source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png' }}
                                 style={styles.googleIcon}
@@ -161,7 +175,7 @@ export default function SignUp() {
                         {/* Footer */}
                         <View style={styles.footer}>
                             <Text style={styles.footerText}>Already have an account? </Text>
-                            <TouchableOpacity onPress={() => router.push('/')}>
+                            <TouchableOpacity onPress={() => router.push('/login')}>
                                 <Text style={styles.signInText}>Log in</Text>
                             </TouchableOpacity>
                         </View>
@@ -176,7 +190,7 @@ export default function SignUp() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.background,
     },
     keyboardView: {
         flex: 1,
@@ -188,148 +202,201 @@ const styles = StyleSheet.create({
         paddingBottom: 30,
     },
     header: {
-        marginBottom: 20,
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        marginBottom: 10,
         marginTop: 10,
-        alignItems: 'flex-start',
     },
     backButton: {
-        padding: 4,
-        marginLeft: -4,
+        padding: 8,
+        marginLeft: -8,
+        backgroundColor: theme.surface,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: theme.border,
     },
-    titleContainer: {
-        marginBottom: 20,
-    },
-    mainTitle: {
-        fontSize: 28,
-        fontWeight: '700',
-        color: '#1A1A1A',
-        marginBottom: 8,
-    },
-    subtitle: {
-        fontSize: 14,
-        color: '#8e8e93',
-        fontWeight: '400',
-    },
+    
+    // Illustration
     illustrationContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 24,
+        marginBottom: 30,
     },
     circleContainer: {
-        width: 120, // Smaller than Login to fit content
+        width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: theme.surface,
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: theme.border,
+        marginBottom: 20,
+        zIndex: 5,
     },
     illustration: {
         width: '100%',
         height: '100%',
     },
+    ring1: {
+        position: 'absolute',
+        width: '125%',
+        height: '125%',
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: 'rgba(36, 107, 253, 0.1)',
+        zIndex: -1,
+    },
+    ring2: {
+        position: 'absolute',
+        width: '150%',
+        height: '150%',
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: 'rgba(36, 107, 253, 0.05)',
+        zIndex: -2,
+    },
+    mainTitle: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: theme.textMain,
+        marginBottom: 6,
+    },
+    subtitle: {
+        fontSize: 14,
+        color: theme.textSecondary,
+        fontWeight: '400',
+    },
+
+    // Form
     formContainer: {
         flex: 1,
+        marginTop: 10,
     },
     inputGroup: {
         marginBottom: 16,
     },
     label: {
         fontSize: 14,
-        fontWeight: '700', // Bold label as per reference
-        color: '#1A1A1A',
+        fontWeight: '600',
+        color: theme.textSecondary,
         marginBottom: 8,
     },
     input: {
         height: 52,
         borderWidth: 1,
-        borderColor: '#E8E8E8',
+        borderColor: theme.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         fontSize: 15,
-        color: '#1A1A1A',
-        backgroundColor: '#FFFFFF',
+        color: theme.textMain,
+        backgroundColor: theme.inputBg,
     },
     passwordContainer: {
         height: 52,
         borderWidth: 1,
-        borderColor: '#E8E8E8',
+        borderColor: theme.border,
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.inputBg,
     },
     passwordInput: {
         flex: 1,
         height: '100%',
         paddingHorizontal: 16,
         fontSize: 15,
-        color: '#1A1A1A',
+        color: theme.textMain,
     },
     eyeIcon: {
         padding: 10,
         marginRight: 6,
     },
+    
+    // Terms
     termsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
         marginTop: 4,
         marginBottom: 24,
-    },
-    termsText: {
-        fontSize: 14,
-        color: '#1A1A1A',
-        fontWeight: '700',
     },
     checkbox: {
         width: 24,
         height: 24,
         borderWidth: 2,
-        borderColor: '#1A1A1A',
+        borderColor: theme.border,
         borderRadius: 6,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: theme.inputBg,
+        marginRight: 12,
     },
     checkboxChecked: {
-        backgroundColor: '#1A1A1A',
+        backgroundColor: theme.accent,
+        borderColor: theme.accent,
     },
+    termsText: {
+        fontSize: 13,
+        color: theme.textSecondary,
+        flex: 1,
+        lineHeight: 20,
+    },
+    linkText: {
+        color: theme.accent,
+        fontWeight: '600',
+    },
+
+    // Buttons
     signUpButton: {
-        backgroundColor: '#1A1A1A', // Black button
+        backgroundColor: theme.accent,
         height: 56,
-        borderRadius: 12,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowColor: theme.accent,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
     },
     signUpButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
+        letterSpacing: 0.5,
     },
+    
+    // Divider
     dividerContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 20,
     },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: theme.border,
+    },
     dividerText: {
         fontSize: 12,
-        color: '#666666',
+        color: theme.textSecondary,
         fontWeight: '600',
+        marginHorizontal: 16,
     },
+
+    // Google Button
     googleButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         height: 56,
         borderWidth: 1,
-        borderColor: '#E8E8E8',
-        borderRadius: 12,
-        backgroundColor: '#FFFFFF',
+        borderColor: theme.border,
+        borderRadius: 16,
+        backgroundColor: theme.surface,
         marginBottom: 24,
     },
     googleIcon: {
@@ -338,10 +405,12 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     googleButtonText: {
-        color: '#1A1A1A',
+        color: theme.textMain,
         fontSize: 15,
         fontWeight: '600',
     },
+    
+    // Footer
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -349,13 +418,14 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     footerText: {
-        color: '#8e8e93',
+        color: theme.textSecondary,
         fontSize: 14,
         fontWeight: '500',
     },
     signInText: {
-        color: '#1A1A1A',
+        color: theme.textMain, 
         fontSize: 14,
         fontWeight: '700',
+        textDecorationLine: 'underline',
     },
 });

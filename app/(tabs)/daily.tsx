@@ -1,211 +1,314 @@
-import Colors from '@/constants/Colors';
-import { useApp } from '@/context/AppContext';
-import { FontAwesome } from '@expo/vector-icons';
-import React from 'react';
-import { Alert, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { 
+  Alert, 
+  ScrollView, 
+  Share, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View, 
+  StatusBar,
+  SafeAreaView
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { 
+  ChevronLeft, 
+  Share2, 
+  Calendar, 
+  ChevronRight, 
+  TrendingUp, 
+  DollarSign, 
+  PieChart,
+  Anchor
+} from 'lucide-react-native';
+
+// --- MOCK CONTEXT (Replace with your actual import) ---
+// import { useApp } from '@/context/AppContext';
+const useApp = () => {
+    // Mocking data for demonstration
+    const [lots] = useState([
+        { id: '1', boatId: '1', boatName: 'Sea Spirit', species: 'Prawns', weight: 50, pricePerUnit: 400, totalAmount: 20000, commissionAmount: 1000, payableAmount: 19000, timestamp: new Date().setHours(8,0,0,0) },
+        { id: '2', boatId: '2', boatName: 'Ocean King', species: 'Mackerel', weight: 120, pricePerUnit: 150, totalAmount: 18000, commissionAmount: 900, payableAmount: 17100, timestamp: new Date().setHours(9,30,0,0) },
+        { id: '3', boatId: '1', boatName: 'Sea Spirit', species: 'Tuna', weight: 30, pricePerUnit: 800, totalAmount: 24000, commissionAmount: 1200, payableAmount: 22800, timestamp: new Date().setHours(10,15,0,0) },
+    ]);
+    return { lots, boats: [] };
+};
 
 export default function DailyScreen() {
-    const { lots, boats } = useApp();
+    const router = useRouter();
+    const { lots } = useApp();
+    
+    // State for Date Navigation
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
-    // Filter for today
-    const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).getTime();
-    const todaysLots = lots.filter(lot => lot.timestamp >= startOfDay);
+    // --- CALCULATIONS ---
+    const dailyStats = useMemo(() => {
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23, 59, 59, 999);
 
-    // Calculate Totals
-    const totalRevenue = todaysLots.reduce((sum, lot) => sum + lot.totalAmount, 0);
-    const totalCommission = todaysLots.reduce((sum, lot) => sum + lot.commissionAmount, 0);
-    const totalPayable = todaysLots.reduce((sum, lot) => sum + lot.payableAmount, 0);
+        const daysLots = lots.filter(lot => 
+            lot.timestamp >= startOfDay.getTime() && 
+            lot.timestamp <= endOfDay.getTime()
+        );
 
-    // Group by Species
-    const speciesStats: Record<string, { weight: number; amount: number; count: number }> = {};
-    todaysLots.forEach(lot => {
-        if (!speciesStats[lot.species]) {
-            speciesStats[lot.species] = { weight: 0, amount: 0, count: 0 };
-        }
-        speciesStats[lot.species].weight += lot.weight;
-        speciesStats[lot.species].amount += lot.totalAmount;
-        speciesStats[lot.species].count += 1;
-    });
+        const revenue = daysLots.reduce((sum, lot) => sum + lot.totalAmount, 0);
+        const commission = daysLots.reduce((sum, lot) => sum + lot.commissionAmount, 0);
+        const payable = daysLots.reduce((sum, lot) => sum + lot.payableAmount, 0);
+
+        // Species Grouping
+        const speciesMap: Record<string, { weight: number; amount: number; count: number }> = {};
+        daysLots.forEach(lot => {
+            if (!speciesMap[lot.species]) {
+                speciesMap[lot.species] = { weight: 0, amount: 0, count: 0 };
+            }
+            speciesMap[lot.species].weight += lot.weight;
+            speciesMap[lot.species].amount += lot.totalAmount;
+            speciesMap[lot.species].count += 1;
+        });
+
+        // Convert to array and sort by weight for the progress bars
+        const speciesList = Object.entries(speciesMap)
+            .map(([name, stats]) => ({ name, ...stats }))
+            .sort((a, b) => b.weight - a.weight);
+
+        const maxWeight = speciesList.length > 0 ? speciesList[0].weight : 1;
+
+        return { 
+            daysLots, 
+            revenue, 
+            commission, 
+            payable, 
+            speciesList, 
+            maxWeight 
+        };
+    }, [selectedDate, lots]);
+
+    // --- HANDLERS ---
+    const changeDate = (days: number) => {
+        const newDate = new Date(selectedDate);
+        newDate.setDate(newDate.getDate() + days);
+        setSelectedDate(newDate);
+    };
 
     const handleShare = async () => {
+        const dateStr = selectedDate.toDateString();
         const message = `
-📅 *Daily Summary - ${new Date().toDateString()}*
+📊 *DAILY REPORT - ${dateStr}*
+--------------------------------
+💰 *Gross Revenue:* ₹${dailyStats.revenue.toLocaleString()}
+🏷️ *Commission:* ₹${dailyStats.commission.toLocaleString()}
+✅ *Net Payable:* ₹${dailyStats.payable.toLocaleString()}
 
-💰 Revenue: ₹${totalRevenue.toLocaleString()}
-🏷️ Commission: ₹${totalCommission.toLocaleString()}
-💵 Payable: ₹${totalPayable.toLocaleString()}
+🐟 *Catch Summary:*
+${dailyStats.speciesList.map(s => `• ${s.name}: ${s.weight}kg (₹${s.amount.toLocaleString()})`).join('\n')}
 
-*Species Breakdown:*
-${Object.entries(speciesStats).map(([name, stats]) =>
-            `- ${name}: ${stats.weight}kg (₹${stats.amount.toLocaleString()})`
-        ).join('\n')}
-
-Total Lots: ${todaysLots.length}
-    `.trim();
+📝 *Total Transactions:* ${dailyStats.daysLots.length}
+--------------------------------
+Generated by AquaLedger
+        `.trim();
 
         try {
-            await Share.share({
-                message,
-            });
+            await Share.share({ message });
         } catch (error) {
             Alert.alert('Error', (error as Error).message);
         }
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Daily Summary</Text>
-                <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-                    <FontAwesome name="whatsapp" size={24} color="#FFF" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Top Cards */}
-            <View style={styles.cardsContainer}>
-                <View style={[styles.card, { backgroundColor: '#E3F2FD' }]}>
-                    <Text style={styles.cardLabel}>Revenue</Text>
-                    <Text style={styles.cardValue}>₹{totalRevenue.toLocaleString()}</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle="light-content" backgroundColor="#0B0B15" />
+            
+            <View style={styles.container}>
+                {/* --- HEADER --- */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <ChevronLeft size={24} color="#FFF" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Daily Summary</Text>
+                    <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
+                        <Share2 size={20} color="#FFF" />
+                    </TouchableOpacity>
                 </View>
-                <View style={[styles.card, { backgroundColor: '#E8F5E9' }]}>
-                    <Text style={styles.cardLabel}>Payable</Text>
-                    <Text style={[styles.cardValue, { color: Colors.light.success }]}>
-                        ₹{totalPayable.toLocaleString()}
-                    </Text>
-                </View>
-            </View>
 
-            {/* Species Breakdown */}
-            <Text style={styles.sectionTitle}>Species Breakdown</Text>
-            <View style={styles.listContainer}>
-                {Object.entries(speciesStats).map(([name, stats]) => (
-                    <View key={name} style={styles.listItem}>
-                        <View>
-                            <Text style={styles.itemTitle}>{name}</Text>
-                            <Text style={styles.itemSubtitle}>{stats.count} lots • {stats.weight} kg</Text>
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                    
+                    {/* --- DATE NAVIGATOR --- */}
+                    <View style={styles.dateNavContainer}>
+                        <TouchableOpacity onPress={() => changeDate(-1)} style={styles.navArrow}>
+                            <ChevronLeft size={20} color="#666" />
+                        </TouchableOpacity>
+                        
+                        <View style={styles.dateDisplay}>
+                            <Calendar size={16} color="#246BFD" style={{ marginRight: 8 }} />
+                            <Text style={styles.dateText}>
+                                {selectedDate.toDateString() === new Date().toDateString() 
+                                    ? "Today, " + selectedDate.toLocaleDateString(undefined, {month:'short', day:'numeric'}) 
+                                    : selectedDate.toDateString()}
+                            </Text>
                         </View>
-                        <Text style={styles.itemAmount}>₹{stats.amount.toLocaleString()}</Text>
+
+                        <TouchableOpacity onPress={() => changeDate(1)} style={styles.navArrow}>
+                            <ChevronRight size={20} color="#666" />
+                        </TouchableOpacity>
                     </View>
-                ))}
-                {Object.keys(speciesStats).length === 0 && (
-                    <Text style={styles.emptyText}>No data for today</Text>
-                )}
-            </View>
 
-            {/* Detailed List */}
-            <Text style={styles.sectionTitle}>Lot Details</Text>
-            <View style={styles.listContainer}>
-                {todaysLots.map((lot) => {
-                    const boat = boats.find(b => b.id === lot.boatId);
-                    return (
-                        <View key={lot.id} style={styles.listItem}>
-                            <View>
-                                <Text style={styles.itemTitle}>{boat?.name}</Text>
-                                <Text style={styles.itemSubtitle}>{lot.species} • {lot.weight}kg @ ₹{lot.pricePerUnit}</Text>
+                    {/* --- FINANCIAL GRID --- */}
+                    <View style={styles.statsGrid}>
+                        {/* Revenue */}
+                        <View style={styles.statCard}>
+                            <View style={[styles.iconBg, { backgroundColor: 'rgba(36, 107, 253, 0.15)' }]}>
+                                <TrendingUp size={20} color="#246BFD" />
                             </View>
-                            <View style={{ alignItems: 'flex-end' }}>
-                                <Text style={styles.itemAmount}>₹{lot.totalAmount.toLocaleString()}</Text>
-                                <Text style={styles.itemCommission}>Comm: ₹{lot.commissionAmount.toLocaleString()}</Text>
-                            </View>
+                            <Text style={styles.statLabel}>Revenue</Text>
+                            <Text style={styles.statValue}>₹{(dailyStats.revenue / 1000).toFixed(1)}k</Text>
                         </View>
-                    );
-                })}
+
+                        {/* Commission */}
+                        <View style={styles.statCard}>
+                            <View style={[styles.iconBg, { backgroundColor: 'rgba(255, 87, 95, 0.15)' }]}>
+                                <PieChart size={20} color="#FF575F" />
+                            </View>
+                            <Text style={styles.statLabel}>Comm.</Text>
+                            <Text style={[styles.statValue, { color: '#FF575F' }]}>₹{(dailyStats.commission / 1000).toFixed(1)}k</Text>
+                        </View>
+
+                        {/* Payable */}
+                        <View style={styles.statCard}>
+                            <View style={[styles.iconBg, { backgroundColor: 'rgba(147, 217, 78, 0.15)' }]}>
+                                <DollarSign size={20} color="#93D94E" />
+                            </View>
+                            <Text style={styles.statLabel}>Net Pay</Text>
+                            <Text style={[styles.statValue, { color: '#93D94E' }]}>₹{(dailyStats.payable / 1000).toFixed(1)}k</Text>
+                        </View>
+                    </View>
+
+                    {/* --- SPECIES BREAKDOWN (With Visual Bars) --- */}
+                    <Text style={styles.sectionTitle}>Catch Analysis</Text>
+                    <View style={styles.sectionCard}>
+                        {dailyStats.speciesList.length > 0 ? (
+                            dailyStats.speciesList.map((item, index) => (
+                                <View key={index} style={styles.speciesRow}>
+                                    <View style={styles.speciesHeader}>
+                                        <Text style={styles.speciesName}>{item.name}</Text>
+                                        <Text style={styles.speciesAmount}>₹{item.amount.toLocaleString()}</Text>
+                                    </View>
+                                    <View style={styles.progressBarContainer}>
+                                        <View 
+                                            style={[
+                                                styles.progressBar, 
+                                                { width: `${(item.weight / dailyStats.maxWeight) * 100}%` }
+                                            ]} 
+                                        />
+                                    </View>
+                                    <Text style={styles.speciesDetail}>{item.weight} kg • {item.count} lots</Text>
+                                </View>
+                            ))
+                        ) : (
+                            <Text style={styles.emptyText}>No data for this date</Text>
+                        )}
+                    </View>
+
+                    {/* --- TRANSACTION LIST --- */}
+                    <Text style={styles.sectionTitle}>Transactions</Text>
+                    <View style={{ gap: 12 }}>
+                        {dailyStats.daysLots.map((lot) => (
+                            <View key={lot.id} style={styles.transactionCard}>
+                                <View style={styles.transLeft}>
+                                    <View style={styles.boatIconSmall}>
+                                        <Anchor size={16} color="#AAA" />
+                                    </View>
+                                    <View>
+                                        <Text style={styles.transBoat}>{lot.boatName}</Text>
+                                        <Text style={styles.transTime}>
+                                            {new Date(lot.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {lot.species}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <View style={styles.transRight}>
+                                    <Text style={styles.transAmount}>₹{lot.totalAmount.toLocaleString()}</Text>
+                                    <Text style={styles.transWeight}>{lot.weight}kg</Text>
+                                </View>
+                            </View>
+                        ))}
+                         {dailyStats.daysLots.length === 0 && (
+                            <Text style={styles.emptyText}>No transactions found.</Text>
+                        )}
+                    </View>
+
+                </ScrollView>
             </View>
-        </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.light.background,
-        padding: 20,
+    safeArea: { flex: 1, backgroundColor: "#0B0B15" },
+    container: { flex: 1, backgroundColor: "#0B0B15" },
+    
+    // Header
+    header: { 
+        paddingHorizontal: 20, 
+        paddingBottom: 20, 
+        flexDirection: "row", 
+        alignItems: "center", 
+        justifyContent: "space-between",
+        marginTop: 30 // Top Margin for Back Button
     },
-    header: {
-        marginTop: 40,
-        marginBottom: 20,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+    backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 20, backgroundColor: '#181822', borderWidth: 1, borderColor: '#2A2A35' },
+    headerTitle: { fontSize: 18, fontWeight: '700', color: '#FFF' },
+    shareButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 20, backgroundColor: '#246BFD' },
+
+    scrollContent: { paddingHorizontal: 20, paddingBottom: 50 },
+
+    // Date Navigation
+    dateNavContainer: { 
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', 
+        backgroundColor: '#181822', borderRadius: 16, padding: 8, marginBottom: 24,
+        borderWidth: 1, borderColor: '#2A2A35'
     },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: Colors.light.primary,
+    navArrow: { padding: 10 },
+    dateDisplay: { flexDirection: 'row', alignItems: 'center' },
+    dateText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+
+    // Financial Grid
+    statsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24, gap: 12 },
+    statCard: { 
+        flex: 1, backgroundColor: '#181822', borderRadius: 16, padding: 12, 
+        alignItems: 'center', borderWidth: 1, borderColor: '#2A2A35' 
     },
-    shareButton: {
-        backgroundColor: '#25D366',
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 3,
+    iconBg: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+    statLabel: { color: '#AAA', fontSize: 12, marginBottom: 4 },
+    statValue: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+
+    // Sections
+    sectionTitle: { fontSize: 18, fontWeight: '700', color: '#FFF', marginBottom: 12, marginTop: 8 },
+    sectionCard: { backgroundColor: '#181822', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#2A2A35', marginBottom: 24 },
+    
+    // Species Rows
+    speciesRow: { marginBottom: 16 },
+    speciesHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+    speciesName: { color: '#FFF', fontSize: 14, fontWeight: '600' },
+    speciesAmount: { color: '#AAA', fontSize: 14 },
+    progressBarContainer: { height: 6, backgroundColor: '#2A2A35', borderRadius: 3, marginBottom: 6 },
+    progressBar: { height: '100%', backgroundColor: '#246BFD', borderRadius: 3 },
+    speciesDetail: { color: '#666', fontSize: 10 },
+
+    // Transactions
+    transactionCard: { 
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        backgroundColor: '#181822', padding: 16, borderRadius: 16,
+        borderWidth: 1, borderColor: '#2A2A35'
     },
-    cardsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 24,
-    },
-    card: {
-        width: '48%',
-        padding: 16,
-        borderRadius: 12,
-        elevation: 2,
-    },
-    cardLabel: {
-        fontSize: 14,
-        color: '#555',
-        marginBottom: 4,
-    },
-    cardValue: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 12,
-        color: '#333',
-    },
-    listContainer: {
-        backgroundColor: '#FFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 24,
-        elevation: 2,
-    },
-    listItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
-    },
-    itemTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-    },
-    itemSubtitle: {
-        fontSize: 14,
-        color: '#666',
-    },
-    itemAmount: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    itemCommission: {
-        fontSize: 12,
-        color: '#999',
-    },
-    emptyText: {
-        textAlign: 'center',
-        color: '#999',
-        paddingVertical: 10,
-    },
+    transLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    boatIconSmall: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#2A2A35', justifyContent: 'center', alignItems: 'center' },
+    transBoat: { color: '#FFF', fontSize: 14, fontWeight: '600' },
+    transTime: { color: '#666', fontSize: 12 },
+    transRight: { alignItems: 'flex-end' },
+    transAmount: { color: '#93D94E', fontSize: 14, fontWeight: '700' },
+    transWeight: { color: '#AAA', fontSize: 12 },
+
+    emptyText: { color: '#666', textAlign: 'center', fontStyle: 'italic', padding: 20 }
 });
