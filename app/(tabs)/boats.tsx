@@ -1,525 +1,1005 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  FlatList, 
-  KeyboardAvoidingView, 
-  Modal, 
-  Platform, 
-  StyleSheet, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  View, 
-  Image, 
-  StatusBar,
-  SafeAreaView,
-  Alert,
-  RefreshControl,
-  Linking, // Import Linking for calls
-  ScrollView // Import ScrollView for form scrolling
-} from 'react-native';
-import { 
-  Search, 
-  Plus, 
-  User, 
-  Phone, 
-  FileText, 
-  X, 
-  Camera, 
-  MoreVertical,
-  ChevronLeft,
-  Trash2,
-  Edit2,
-  AlertCircle,
-  CheckCircle2
-} from 'lucide-react-native';
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import * as ImagePicker from 'expo-image-picker'; // Import Image Picker
+import {
+    AlertCircle,
+    Camera,
+    CheckCircle2,
+    ChevronLeft,
+    Edit2,
+    FileText,
+    MoreVertical,
+    Phone,
+    Plus,
+    Search,
+    Trash2,
+    User,
+    X,
+} from "lucide-react-native";
+import React, { useCallback, useState } from "react";
+import {
+    Alert,
+    FlatList,
+    Image,
+    KeyboardAvoidingView,
+    Linking,
+    Modal,
+    Platform,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
-// --- MOCK CONTEXT ---
-const useApp = () => {
-  const [boats, setBoats] = useState([
-    { id: '1', name: 'Sea Spirit', ownerName: 'Derek Doyle', phone: '9876543210', notes: 'Premium member', status: 'active', image: 'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?q=80&w=1000&auto=format&fit=crop' },
-    { id: '2', name: 'Ocean King', ownerName: 'Sarah Smith', phone: '1234567890', notes: 'Engine service due', status: 'maintenance', image: 'https://images.unsplash.com/photo-1544551763-46a42a461d12?q=80&w=1000&auto=format&fit=crop' },
-  ]);
+// -----------------------------------------------------------
+// TYPES
+// -----------------------------------------------------------
 
-  const addBoat = (boat: any) => setBoats(prev => [{...boat, id: Math.random().toString(), status: 'active'}, ...prev]);
-  
-  const updateBoat = (id: string, updatedData: any) => {
-    setBoats(prev => prev.map(boat => boat.id === id ? { ...boat, ...updatedData } : boat));
+type Boat = {
+  id: string;
+  name: string;
+  ownerName: string;
+  phone: string;
+  notes: string;
+  status: "active" | "maintenance";
+  image: string;
+};
+
+type BoatFormData = {
+  name: string;
+  ownerName: string;
+  phone: string;
+  notes: string;
+  image: string;
+  status: "active" | "maintenance";
+};
+
+// -----------------------------------------------------------
+// MOCK DATA + LOCAL STORE (self-contained as requested)
+// -----------------------------------------------------------
+
+const initialBoats: Boat[] = [
+  {
+    id: "1",
+    name: "Sea Spirit",
+    ownerName: "Derek Doyle",
+    phone: "9876543210",
+    notes: "Premium member",
+    status: "active",
+    image:
+      "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: "2",
+    name: "Ocean King",
+    ownerName: "Sarah Smith",
+    phone: "1234567890",
+    notes: "Engine service due",
+    status: "maintenance",
+    image:
+      "https://images.unsplash.com/photo-1544551763-46a42a461d12?q=80&w=1000&auto=format&fit=crop",
+  },
+];
+
+// -----------------------------------------------------------
+// COMPONENT
+// -----------------------------------------------------------
+
+export default function BoatsScreen() {
+  const router = useRouter();
+
+  const [boats, setBoats] = useState<Boat[]>(initialBoats);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [selectedBoatId, setSelectedBoatId] = useState<string | null>(null);
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [isOptionsVisible, setIsOptionsVisible] = useState(false);
+
+  const [formData, setFormData] = useState<BoatFormData>({
+    name: "",
+    ownerName: "",
+    phone: "",
+    notes: "",
+    image: "",
+    status: "active",
+  });
+
+  // -----------------------------------------------------------
+  // HELPERS
+  // -----------------------------------------------------------
+
+  const addBoat = (boat: BoatFormData) => {
+    setBoats((prev) => [
+      { ...boat, id: Math.random().toString(), status: "active" },
+      ...prev,
+    ]);
+  };
+
+  const updateBoat = (id: string, data: Partial<BoatFormData>) => {
+    setBoats((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, ...data } : b))
+    );
   };
 
   const deleteBoat = (id: string) => {
-    setBoats(prev => prev.filter(boat => boat.id !== id));
+    setBoats((prev) => prev.filter((b) => b.id !== id));
   };
 
-  return { boats, addBoat, updateBoat, deleteBoat };
-};
-// --------------------
+  const filteredBoats = boats.filter(
+    (b) =>
+      b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.ownerName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-export default function BoatsScreen() {
-    const router = useRouter();
-    const { boats, addBoat, updateBoat, deleteBoat } = useApp();
-    
-    // UI States
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isFormVisible, setIsFormVisible] = useState(false);
-    const [isOptionsVisible, setIsOptionsVisible] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
+  // -----------------------------------------------------------
+  // PICK IMAGE
+  // -----------------------------------------------------------
 
-    // Data States
-    const [selectedBoatId, setSelectedBoatId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ name: '', ownerName: '', phone: '', notes: '', image: '', status: 'active' });
+  const pickImage = async () => {
+    const { status } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    const filteredBoats = boats.filter(boat =>
-        boat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        boat.ownerName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    if (status !== "granted") {
+      Alert.alert("Permission needed", "Please allow gallery access.");
+      return;
+    }
 
-    // --- HANDLERS ---
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
 
-    // 1. Image Picker Logic
-    const pickImage = async () => {
-        // Request permission
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        
-        if (status !== 'granted') {
-            Alert.alert('Permission needed', 'Sorry, we need camera roll permissions to make this work!');
-            return;
-        }
+    if (!result.canceled) {
+      setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
+    }
+  };
 
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 0.8,
-        });
+  // -----------------------------------------------------------
+  // PHONE CALL
+  // -----------------------------------------------------------
 
-        if (!result.canceled) {
-            setFormData({ ...formData, image: result.assets[0].uri });
-        }
+  const handleCall = (number: string) => {
+    const url = `tel:${number}`;
+    Linking.openURL(url).catch(() => {
+      Alert.alert("Error", "Unable to place call.");
+    });
+  };
+
+  // -----------------------------------------------------------
+  // OPTIONS SHEET
+  // -----------------------------------------------------------
+
+  const handleOpenOptions = (boat: Boat) => {
+    setSelectedBoatId(boat.id);
+    setFormData({
+      name: boat.name,
+      ownerName: boat.ownerName,
+      phone: boat.phone,
+      notes: boat.notes,
+      image: boat.image,
+      status: boat.status,
+    });
+    setIsOptionsVisible(true);
+  };
+
+  const handleEditFromOptions = () => {
+    setIsOptionsVisible(false);
+    setTimeout(() => setIsFormVisible(true), 250);
+  };
+
+  const handleToggleStatus = () => {
+    if (!selectedBoatId) return;
+
+    updateBoat(selectedBoatId, {
+      status: formData.status === "active" ? "maintenance" : "active",
+    });
+
+    setIsOptionsVisible(false);
+  };
+
+  const handleDelete = () => {
+    if (!selectedBoatId) return;
+
+    Alert.alert("Delete boat", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteBoat(selectedBoatId);
+          setIsOptionsVisible(false);
+        },
+      },
+    ]);
+  };
+
+  // -----------------------------------------------------------
+  // FORM SAVE
+  // -----------------------------------------------------------
+
+  const handleSave = () => {
+    if (!formData.name || !formData.ownerName) {
+      Alert.alert("Missing fields", "Boat name and owner name are required.");
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      image:
+        formData.image ||
+        "https://images.unsplash.com/photo-1516410290616-2e452627e774?q=80&w=1000&auto=format&fit=crop",
     };
 
-    // 2. Phone Call Logic
-    const handleCall = (phoneNumber: string) => {
-        const url = `tel:${phoneNumber}`;
-        Linking.canOpenURL(url)
-            .then((supported) => {
-                if (!supported) {
-                    Alert.alert('Error', 'Phone calls are not supported on this simulator');
-                } else {
-                    return Linking.openURL(url);
-                }
-            })
-            .catch((err) => console.error('An error occurred', err));
-    };
+    if (selectedBoatId) {
+      updateBoat(selectedBoatId, payload);
+    } else {
+      addBoat(payload);
+    }
 
-    const handleOpenAdd = () => {
-        setFormData({ name: '', ownerName: '', phone: '', notes: '', image: '', status: 'active' });
-        setSelectedBoatId(null);
-        setIsFormVisible(true);
-    };
+    setIsFormVisible(false);
+  };
 
-    const handleOpenOptions = (boat: any) => {
-        setSelectedBoatId(boat.id);
-        setFormData(boat);
-        setIsOptionsVisible(true);
-    };
+  // -----------------------------------------------------------
+  // REFRESH
+  // -----------------------------------------------------------
 
-    const handleEditFromOptions = () => {
-        setIsOptionsVisible(false);
-        setTimeout(() => setIsFormVisible(true), 300);
-    };
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 800);
+  }, []);
 
-    const handleDelete = () => {
-        Alert.alert(
-            "Delete Boat",
-            "Are you sure? This action cannot be undone.",
-            [
-                { text: "Cancel", style: "cancel" },
-                { 
-                    text: "Delete", 
-                    style: "destructive", 
-                    onPress: () => {
-                        if (selectedBoatId) deleteBoat(selectedBoatId);
-                        setIsOptionsVisible(false);
-                    }
-                }
-            ]
-        );
-    };
+  // -----------------------------------------------------------
+  // RENDER BOAT ITEM
+  // -----------------------------------------------------------
 
-    const handleToggleStatus = () => {
-        if (selectedBoatId) {
-            const newStatus = formData.status === 'active' ? 'maintenance' : 'active';
-            updateBoat(selectedBoatId, { status: newStatus });
-            setIsOptionsVisible(false);
-        }
-    };
+  const renderItem = ({ item }: { item: Boat }) => (
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.9}
+      onPress={() => handleOpenOptions(item)}
+    >
+      <View style={styles.cardImageWrap}>
+        <Image source={{ uri: item.image }} style={styles.cardImage} />
 
-    const handleSave = () => {
-        if (!formData.name || !formData.ownerName) {
-            Alert.alert('Missing Info', 'Please enter Boat Name and Owner Name');
-            return;
-        }
-
-        const finalData = {
-            ...formData,
-            // Fallback image if user didn't pick one
-            image: formData.image || 'https://images.unsplash.com/photo-1516410290616-2e452627e774?q=80&w=1000&auto=format&fit=crop'
-        };
-
-        if (selectedBoatId) {
-            updateBoat(selectedBoatId, finalData);
-        } else {
-            addBoat(finalData);
-        }
-
-        setIsFormVisible(false);
-    };
-
-    const onRefresh = React.useCallback(() => {
-        setRefreshing(true);
-        setTimeout(() => setRefreshing(false), 2000);
-    }, []);
-
-    // --- RENDER ITEM ---
-    const renderBoatItem = ({ item }: { item: any }) => (
-        <TouchableOpacity 
-            style={styles.card} 
-            activeOpacity={0.9} 
-            onPress={() => handleOpenOptions(item)}
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              borderColor:
+                item.status === "active" ? "#93D94E" : "#FFD300",
+            },
+          ]}
         >
-            <View style={styles.cardImageContainer}>
-                <Image source={{ uri: item.image }} style={styles.cardImage} />
-                <View style={[
-                    styles.cardStatusBadge, 
-                    { borderColor: item.status === 'active' ? '#93D94E' : '#FFD300' }
-                ]}>
-                    <View style={[
-                        styles.statusDot, 
-                        { backgroundColor: item.status === 'active' ? '#93D94E' : '#FFD300' }
-                    ]} />
-                    <Text style={[
-                        styles.statusText,
-                        { color: item.status === 'active' ? '#93D94E' : '#FFD300' }
-                    ]}>
-                        {item.status === 'active' ? 'Active' : 'Maintenance'}
-                    </Text>
+          <View
+            style={[
+              styles.statusDot,
+              {
+                backgroundColor:
+                  item.status === "active" ? "#93D94E" : "#FFD300",
+              },
+            ]}
+          />
+          <Text
+            style={[
+              styles.statusLabel,
+              {
+                color:
+                  item.status === "active" ? "#93D94E" : "#FFD300",
+              },
+            ]}
+          >
+            {item.status === "active" ? "Active" : "Maintenance"}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.cardBody}>
+        <View style={styles.cardHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.boatName}>{item.name}</Text>
+            <Text style={styles.boatId}>ID: #{item.id.slice(0, 4)}</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.moreBtn}
+            onPress={() => handleOpenOptions(item)}
+          >
+            <MoreVertical size={20} color="#777" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.infoRow}>
+          <View style={styles.infoItem}>
+            <User size={14} color="#888" style={{ marginRight: 6 }} />
+            <Text style={styles.infoText}>{item.ownerName}</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.phoneTag}
+            onPress={() => handleCall(item.phone)}
+          >
+            <Phone size={14} color="#246BFD" style={{ marginRight: 6 }} />
+            <Text style={styles.phoneText}>{item.phone}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {item.notes ? (
+          <View style={styles.notesRow}>
+            <FileText size={14} color="#777" style={{ marginRight: 6 }} />
+            <Text style={styles.notesText} numberOfLines={1}>
+              {item.notes}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+    </TouchableOpacity>
+  );
+
+  // -----------------------------------------------------------
+  // UI
+  // -----------------------------------------------------------
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="light-content" />
+
+      <View style={styles.screen}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
+            <ChevronLeft size={24} color="#FFF" />
+          </TouchableOpacity>
+
+          <Text style={styles.headerTitle}>Boat Management</Text>
+          <View style={{ width: 40 }} />
+        </View>
+
+        {/* Search */}
+        <View style={styles.searchBox}>
+          <Search size={20} color="#777" />
+          <TextInput
+            value={searchQuery}
+            placeholder="Search boats..."
+            placeholderTextColor="#777"
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+          />
+        </View>
+
+        {/* List */}
+        <FlatList
+          data={filteredBoats}
+          renderItem={renderItem}
+          keyExtractor={(b) => b.id}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#246BFD"
+            />
+          }
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <TouchableOpacity
+              style={styles.addBoatBanner}
+              onPress={() => {
+                setFormData({
+                  name: "",
+                  ownerName: "",
+                  phone: "",
+                  notes: "",
+                  image: "",
+                  status: "active",
+                });
+                setSelectedBoatId(null);
+                setIsFormVisible(true);
+              }}
+            >
+              <View style={styles.addIcon}>
+                <Plus size={24} color="#FFF" />
+              </View>
+
+              <View>
+                <Text style={styles.addBoatTitle}>Register New Boat</Text>
+                <Text style={styles.addBoatSubtitle}>
+                  Tap to add details & photos
+                </Text>
+              </View>
+            </TouchableOpacity>
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No boats found</Text>
+          }
+        />
+
+        {/* ------------------------------------------------------- */}
+        {/* Options Sheet */}
+        {/* ------------------------------------------------------- */}
+
+        <Modal
+          visible={isOptionsVisible}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setIsOptionsVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setIsOptionsVisible(false)}
+          >
+            <View style={styles.optionsSheet}>
+              <View style={styles.dragHandle} />
+
+              <Text style={styles.optionsTitle}>Boat Options</Text>
+
+              <TouchableOpacity
+                style={styles.optionRow}
+                onPress={handleEditFromOptions}
+              >
+                <View
+                  style={[
+                    styles.optionIcon,
+                    { backgroundColor: "rgba(36,107,253,0.1)" },
+                  ]}
+                >
+                  <Edit2 size={20} color="#246BFD" />
                 </View>
+                <Text style={styles.optionText}>Edit Details</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.optionRow}
+                onPress={handleToggleStatus}
+              >
+                <View
+                  style={[
+                    styles.optionIcon,
+                    { backgroundColor: "rgba(147,217,78,0.1)" },
+                  ]}
+                >
+                  {formData.status === "active" ? (
+                    <AlertCircle size={20} color="#FFD300" />
+                  ) : (
+                    <CheckCircle2 size={20} color="#93D94E" />
+                  )}
+                </View>
+                <Text style={styles.optionText}>
+                  {formData.status === "active"
+                    ? "Mark as Maintenance"
+                    : "Mark as Active"}
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.optionsDivider} />
+
+              <TouchableOpacity
+                style={styles.optionRow}
+                onPress={handleDelete}
+              >
+                <View
+                  style={[
+                    styles.optionIcon,
+                    { backgroundColor: "rgba(255,87,95,0.1)" },
+                  ]}
+                >
+                  <Trash2 size={20} color="#FF575F" />
+                </View>
+                <Text style={[styles.optionText, { color: "#FF575F" }]}>
+                  Delete Boat
+                </Text>
+              </TouchableOpacity>
             </View>
+          </TouchableOpacity>
+        </Modal>
 
-            <View style={styles.cardContent}>
-                <View style={styles.cardHeader}>
-                    <View style={{flex: 1}}>
-                        <Text style={styles.boatName}>{item.name}</Text>
-                        <Text style={styles.idText}>ID: #{item.id.substring(0,4)}</Text>
-                    </View>
-                    <TouchableOpacity 
-                        style={styles.moreBtn} 
-                        onPress={() => handleOpenOptions(item)}
-                    >
-                        <MoreVertical size={20} color="#666" />
-                    </TouchableOpacity>
-                </View>
+        {/* ------------------------------------------------------- */}
+        {/* Add/Edit Form */}
+        {/* ------------------------------------------------------- */}
 
-                <View style={styles.divider} />
+        <Modal
+          visible={isFormVisible}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setIsFormVisible(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={styles.formOverlay}
+          >
+            <View style={styles.formSheet}>
+              <View style={styles.formHeader}>
+                <Text style={styles.formTitle}>
+                  {selectedBoatId ? "Edit Boat" : "Add New Boat"}
+                </Text>
+                <TouchableOpacity onPress={() => setIsFormVisible(false)}>
+                  <X size={24} color="#FFF" />
+                </TouchableOpacity>
+              </View>
 
-                <View style={styles.infoRow}>
-                    <View style={styles.infoItem}>
-                        <User size={14} color="#888" style={{marginRight: 6}} />
-                        <Text style={styles.cardText}>{item.ownerName}</Text>
-                    </View>
-                    
-                    {/* PHONE CLICKABLE AREA */}
-                    <TouchableOpacity 
-                        style={[styles.infoItem, styles.phoneButton]} 
-                        onPress={() => handleCall(item.phone)}
-                    >
-                        <Phone size={14} color="#246BFD" style={{marginRight: 6}} />
-                        <Text style={[styles.cardText, { color: '#246BFD', textDecorationLine: 'underline' }]}>
-                            {item.phone}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
-                {item.notes ? (
-                    <View style={styles.noteContainer}>
-                        <FileText size={14} color="#666" style={{marginRight: 6}} />
-                        <Text style={styles.noteText} numberOfLines={1}>{item.notes}</Text>
-                    </View>
-                ) : null}
-            </View>
-        </TouchableOpacity>
-    );
-
-    return (
-        <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="light-content" backgroundColor="#0B0B15" />
-            
-            <View style={styles.container}>
-                {/* --- HEADER (Fixed Margin) --- */}
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <ChevronLeft size={24} color="#FFF" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Boat Management</Text>
-                    <View style={{ width: 40 }} /> 
-                </View>
-
-                {/* Search */}
-                <View style={styles.searchContainer}>
-                    <Search size={20} color="#666" />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search boats..."
-                        placeholderTextColor="#666"
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <TouchableOpacity
+                  style={styles.imagePicker}
+                  onPress={pickImage}
+                >
+                  {formData.image ? (
+                    <Image
+                      source={{ uri: formData.image }}
+                      style={styles.uploadedImage}
                     />
+                  ) : (
+                    <>
+                      <View style={styles.cameraCircle}>
+                        <Camera size={24} color="#246BFD" />
+                      </View>
+                      <Text style={styles.uploadText}>Upload Photo</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.formBody}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Boat Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. Sea Queen"
+                      placeholderTextColor="#666"
+                      value={formData.name}
+                      onChangeText={(t) =>
+                        setFormData({ ...formData, name: t })
+                      }
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Owner Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. Raju"
+                      placeholderTextColor="#666"
+                      value={formData.ownerName}
+                      onChangeText={(t) =>
+                        setFormData({ ...formData, ownerName: t })
+                      }
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Phone</Text>
+                    <TextInput
+                      style={styles.input}
+                      keyboardType="phone-pad"
+                      placeholder="98765..."
+                      placeholderTextColor="#666"
+                      value={formData.phone}
+                      onChangeText={(t) =>
+                        setFormData({ ...formData, phone: t })
+                      }
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Notes</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Extra info..."
+                      placeholderTextColor="#666"
+                      value={formData.notes}
+                      multiline
+                      onChangeText={(t) =>
+                        setFormData({ ...formData, notes: t })
+                      }
+                    />
+                  </View>
                 </View>
 
-                {/* List */}
-                <FlatList
-                    data={filteredBoats}
-                    renderItem={renderBoatItem}
-                    keyExtractor={item => item.id}
-                    contentContainerStyle={styles.listContent} // Added padding bottom here
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#246BFD" />
-                    }
-                    ListHeaderComponent={
-                        <TouchableOpacity style={styles.addBoatHeaderBtn} onPress={handleOpenAdd}>
-                            <View style={styles.addIconBg}>
-                                <Plus size={24} color="#FFF" />
-                            </View>
-                            <View>
-                                <Text style={styles.addBoatTitle}>Register New Boat</Text>
-                                <Text style={styles.addBoatSubtitle}>Tap to add details & photos</Text>
-                            </View>
-                        </TouchableOpacity>
-                    }
-                    ListEmptyComponent={<Text style={styles.emptyText}>No boats found</Text>}
-                />
-
-                {/* Options Modal */}
-                <Modal
-                    visible={isOptionsVisible}
-                    animationType="fade"
-                    transparent={true}
-                    onRequestClose={() => setIsOptionsVisible(false)}
+                <TouchableOpacity
+                  style={styles.saveBtn}
+                  onPress={handleSave}
                 >
-                    <TouchableOpacity 
-                        style={styles.modalOverlay} 
-                        activeOpacity={1} 
-                        onPress={() => setIsOptionsVisible(false)}
-                    >
-                        <View style={styles.optionsSheet}>
-                            <View style={styles.optionsHandle} />
-                            <Text style={styles.optionsTitle}>Boat Options</Text>
-                            
-                            <TouchableOpacity style={styles.optionRow} onPress={handleEditFromOptions}>
-                                <View style={[styles.optionIcon, { backgroundColor: 'rgba(36, 107, 253, 0.1)' }]}>
-                                    <Edit2 size={20} color="#246BFD" />
-                                </View>
-                                <Text style={styles.optionText}>Edit Details</Text>
-                            </TouchableOpacity>
+                  <Text style={styles.saveBtnText}>
+                    {selectedBoatId ? "Update Boat" : "Save Boat"}
+                  </Text>
+                </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.optionRow} onPress={handleToggleStatus}>
-                                <View style={[styles.optionIcon, { backgroundColor: 'rgba(147, 217, 78, 0.1)' }]}>
-                                    {formData.status === 'active' ? (
-                                         <AlertCircle size={20} color="#FFD300" />
-                                    ) : (
-                                         <CheckCircle2 size={20} color="#93D94E" />
-                                    )}
-                                </View>
-                                <Text style={styles.optionText}>
-                                    {formData.status === 'active' ? 'Mark as Maintenance' : 'Mark as Active'}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <View style={styles.optionDivider} />
-
-                            <TouchableOpacity style={styles.optionRow} onPress={handleDelete}>
-                                <View style={[styles.optionIcon, { backgroundColor: 'rgba(255, 87, 95, 0.1)' }]}>
-                                    <Trash2 size={20} color="#FF575F" />
-                                </View>
-                                <Text style={[styles.optionText, { color: '#FF575F' }]}>Delete Boat</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
-
-                {/* ADD/EDIT FORM MODAL (Scrollable) */}
-                <Modal
-                    visible={isFormVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => setIsFormVisible(false)}
-                >
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        style={styles.modalOverlay}
-                    >
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>
-                                    {selectedBoatId ? 'Edit Boat' : 'Add New Boat'}
-                                </Text>
-                                <TouchableOpacity onPress={() => setIsFormVisible(false)}>
-                                    <X size={24} color="#FFF" />
-                                </TouchableOpacity>
-                            </View>
-
-                            <ScrollView showsVerticalScrollIndicator={false}>
-                                {/* Using pickImage here */}
-                                <TouchableOpacity style={styles.imagePickerContainer} onPress={pickImage}>
-                                    {formData.image ? (
-                                        <Image source={{ uri: formData.image }} style={styles.uploadedImage} />
-                                    ) : (
-                                        <>
-                                            <View style={styles.cameraIconCircle}>
-                                                <Camera size={24} color="#246BFD" />
-                                            </View>
-                                            <Text style={styles.uploadText}>Upload Photo</Text>
-                                        </>
-                                    )}
-                                </TouchableOpacity>
-
-                                <View style={styles.formContainer}>
-                                    <View style={styles.inputGroup}>
-                                        <Text style={styles.label}>Boat Name</Text>
-                                        <TextInput
-                                            style={styles.input}
-                                            value={formData.name}
-                                            onChangeText={(text) => setFormData({ ...formData, name: text })}
-                                            placeholder="e.g. Sea Queen"
-                                            placeholderTextColor="#666"
-                                        />
-                                    </View>
-
-                                    <View style={styles.inputGroup}>
-                                        <Text style={styles.label}>Owner Name</Text>
-                                        <TextInput
-                                            style={styles.input}
-                                            value={formData.ownerName}
-                                            onChangeText={(text) => setFormData({ ...formData, ownerName: text })}
-                                            placeholder="e.g. Raju"
-                                            placeholderTextColor="#666"
-                                        />
-                                    </View>
-
-                                    <View style={styles.rowInputs}>
-                                        <View style={[styles.inputGroup, { flex: 1 }]}>
-                                            <Text style={styles.label}>Phone</Text>
-                                            <TextInput
-                                                style={styles.input}
-                                                value={formData.phone}
-                                                onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                                                placeholder="98765..."
-                                                placeholderTextColor="#666"
-                                                keyboardType="phone-pad"
-                                            />
-                                        </View>
-                                    </View>
-                                    
-                                     <View style={styles.inputGroup}>
-                                        <Text style={styles.label}>Notes</Text>
-                                        <TextInput
-                                            style={styles.input}
-                                            value={formData.notes}
-                                            onChangeText={(text) => setFormData({ ...formData, notes: text })}
-                                            placeholder="Extra info..."
-                                            placeholderTextColor="#666"
-                                            multiline
-                                        />
-                                    </View>
-                                </View>
-
-                                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                                    <Text style={styles.saveButtonText}>
-                                        {selectedBoatId ? 'Update Boat' : 'Save Boat'}
-                                    </Text>
-                                </TouchableOpacity>
-                                <View style={{height: 20}} /> 
-                            </ScrollView>
-                        </View>
-                    </KeyboardAvoidingView>
-                </Modal>
+                <View style={{ height: 30 }} />
+              </ScrollView>
             </View>
-        </SafeAreaView>
-    );
+          </KeyboardAvoidingView>
+        </Modal>
+      </View>
+    </SafeAreaView>
+  );
 }
 
+// -----------------------------------------------------------
+// STYLES
+// -----------------------------------------------------------
+
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: "#0B0B15" },
-    container: { flex: 1, backgroundColor: "#0B0B15" },
-    
-    // HEADER FIX: Increased Padding/Margin for notch
-    header: { 
-        paddingHorizontal: 20, 
-        paddingTop: Platform.OS === 'android' ? 40 : 20, // INCREASED TOP PADDING
-        paddingBottom: 20, 
-        flexDirection: "row", 
-        alignItems: "center", 
-        justifyContent: "space-between" 
-    },
-    backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 20, backgroundColor: '#181822', borderWidth: 1, borderColor: '#2A2A35' },
-    headerTitle: { fontSize: 20, fontWeight: '700', color: '#FFF' },
+  safe: { flex: 1, backgroundColor: "#0B0B15" },
+  screen: { flex: 1, backgroundColor: "#0B0B15" },
 
-    searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#181822', marginHorizontal: 20, marginBottom: 20, paddingHorizontal: 15, borderRadius: 16, borderWidth: 1, borderColor: '#2A2A35', height: 50 },
-    searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#FFF' },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
 
-    addBoatHeaderBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(36, 107, 253, 0.1)', borderRadius: 20, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(36, 107, 253, 0.3)', borderStyle: 'dashed' },
-    addIconBg: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#246BFD', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-    addBoatTitle: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-    addBoatSubtitle: { color: '#AAA', fontSize: 12, marginTop: 2 },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#181822",
+    borderColor: "#2A2A35",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-    // LIST FIX: Bottom Padding
-    listContent: { paddingHorizontal: 20, paddingBottom: 100 }, 
-    
-    card: { backgroundColor: '#181822', borderRadius: 24, marginBottom: 20, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2A35' },
-    cardImageContainer: { height: 140, width: '100%', backgroundColor: '#2A2A35' },
-    cardImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-    cardStatusBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, flexDirection: 'row', alignItems: 'center' },
-    statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-    statusText: { fontSize: 10, fontWeight: '700' },
-    
-    cardContent: { padding: 16 },
-    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-    boatName: { fontSize: 18, fontWeight: '700', color: '#FFF' },
-    idText: { color: '#666', fontSize: 10, marginTop: 2 },
-    moreBtn: { padding: 4 },
-    divider: { height: 1, backgroundColor: '#2A2A35', marginVertical: 12 },
-    infoRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    infoItem: { flexDirection: 'row', alignItems: 'center' },
-    phoneButton: { padding: 4, backgroundColor: 'rgba(36, 107, 253, 0.1)', borderRadius: 8 }, // Highlight phone area
-    cardText: { fontSize: 14, color: '#CCC', fontWeight: '500' },
-    noteContainer: { marginTop: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: '#13131A', padding: 8, borderRadius: 8 },
-    noteText: { fontSize: 12, color: '#888', flex: 1 },
-    emptyText: { textAlign: 'center', color: '#666', marginTop: 40 },
+  headerTitle: {
+    fontSize: 20,
+    color: "#FFF",
+    fontFamily: "UberMove-Bold",
+  },
 
-    modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' },
-    optionsSheet: { backgroundColor: '#1E1E28', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
-    optionsHandle: { width: 40, height: 4, backgroundColor: '#333', borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
-    optionsTitle: { fontSize: 18, fontWeight: '700', color: '#FFF', marginBottom: 20, textAlign: 'center' },
-    optionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16 },
-    optionIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-    optionText: { fontSize: 16, color: '#FFF', fontWeight: '500' },
-    optionDivider: { height: 1, backgroundColor: '#2A2A35', marginVertical: 8 },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 20,
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "#181822",
+    borderWidth: 1,
+    borderColor: "#2A2A35",
+  },
 
-    modalContent: { backgroundColor: '#181822', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 24, maxHeight: '90%' },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-    modalTitle: { fontSize: 20, fontWeight: '700', color: '#FFF' },
-    imagePickerContainer: { height: 150, backgroundColor: '#13131A', borderRadius: 16, borderWidth: 1, borderColor: '#2A2A35', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', marginBottom: 24, overflow: 'hidden' },
-    uploadedImage: { width: '100%', height: '100%' },
-    cameraIconCircle: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(36, 107, 253, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-    uploadText: { color: '#246BFD', fontSize: 14, fontWeight: '600' },
-    formContainer: { marginBottom: 20 },
-    rowInputs: { flexDirection: 'row' },
-    inputGroup: { marginBottom: 16 },
-    label: { fontSize: 12, color: '#AAA', marginBottom: 8, fontWeight: '600' },
-    input: { backgroundColor: '#13131A', borderRadius: 12, padding: 14, fontSize: 16, color: '#FFF', borderWidth: 1, borderColor: '#2A2A35' },
-    saveButton: { backgroundColor: '#246BFD', padding: 18, borderRadius: 16, alignItems: 'center', marginTop: 10, marginBottom: 20 },
-    saveButtonText: { color: '#FFF', fontWeight: '700', fontSize: 16 },
+  searchInput: {
+    flex: 1,
+    color: "#FFF",
+    fontFamily: "UberMoveText-Regular",
+    fontSize: 15,
+    marginLeft: 10,
+  },
+
+  listContent: { paddingHorizontal: 20, paddingBottom: 120 },
+
+  // Add New Boat Banner
+  addBoatBanner: {
+    flexDirection: "row",
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 24,
+    backgroundColor: "rgba(36,107,253,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(36,107,253,0.3)",
+    borderStyle: "dashed",
+    alignItems: "center",
+  },
+
+  addIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#246BFD",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+
+  addBoatTitle: {
+    color: "#FFF",
+    fontSize: 16,
+    fontFamily: "UberMoveText-Medium",
+  },
+
+  addBoatSubtitle: {
+    color: "#AAA",
+    fontSize: 12,
+    fontFamily: "UberMoveText-Regular",
+    marginTop: 2,
+  },
+
+  // Card
+  card: {
+    borderRadius: 24,
+    backgroundColor: "#181822",
+    borderWidth: 1,
+    borderColor: "#2A2A35",
+    overflow: "hidden",
+    marginBottom: 20,
+  },
+
+  cardImageWrap: {
+    width: "100%",
+    height: 140,
+    backgroundColor: "#2A2A35",
+  },
+
+  cardImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  statusBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+
+  statusLabel: {
+    fontSize: 10,
+    fontFamily: "UberMoveText-Medium",
+  },
+
+  cardBody: { padding: 16 },
+
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  boatName: {
+    fontSize: 18,
+    color: "#FFF",
+    fontFamily: "UberMove-Bold",
+  },
+
+  boatId: {
+    fontSize: 11,
+    color: "#666",
+    marginTop: 2,
+    fontFamily: "UberMoveText-Regular",
+  },
+
+  moreBtn: { padding: 4 },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#2A2A35",
+    marginVertical: 12,
+  },
+
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  infoItem: { flexDirection: "row", alignItems: "center" },
+
+  infoText: {
+    color: "#CCC",
+    fontSize: 14,
+    fontFamily: "UberMoveText-Regular",
+  },
+
+  phoneTag: {
+    flexDirection: "row",
+    backgroundColor: "rgba(36,107,253,0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  phoneText: {
+    color: "#246BFD",
+    fontSize: 13,
+    fontFamily: "UberMoveText-Medium",
+    textDecorationLine: "underline",
+  },
+
+  notesRow: {
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#13131A",
+    padding: 8,
+    borderRadius: 8,
+  },
+
+  notesText: {
+    fontSize: 12,
+    color: "#999",
+    fontFamily: "UberMoveText-Regular",
+  },
+
+  emptyText: {
+    color: "#777",
+    textAlign: "center",
+    marginTop: 40,
+    fontFamily: "UberMoveText-Regular",
+  },
+
+  // Options Sheet
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "flex-end",
+  },
+
+  optionsSheet: {
+    backgroundColor: "#1E1E28",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#333",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+
+  optionsTitle: {
+    fontSize: 18,
+    color: "#FFF",
+    fontFamily: "UberMove-Bold",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+  },
+
+  optionIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+
+  optionText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontFamily: "UberMoveText-Medium",
+  },
+
+  optionsDivider: {
+    height: 1,
+    backgroundColor: "#2A2A35",
+    marginVertical: 12,
+  },
+
+  // Form Sheet
+  formOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
+
+  formSheet: {
+    backgroundColor: "#181822",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    maxHeight: "90%",
+  },
+
+  formHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+
+  formTitle: {
+    fontSize: 20,
+    color: "#FFF",
+    fontFamily: "UberMove-Bold",
+  },
+
+  imagePicker: {
+    height: 150,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#2A2A35",
+    borderStyle: "dashed",
+    backgroundColor: "#13131A",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+
+  cameraCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(36,107,253,0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  uploadedImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  uploadText: {
+    color: "#246BFD",
+    fontSize: 14,
+    fontFamily: "UberMoveText-Medium",
+  },
+
+  formBody: {
+    marginBottom: 20,
+  },
+
+  inputGroup: {
+    marginBottom: 16,
+  },
+
+  label: {
+    color: "#AAA",
+    fontSize: 12,
+    marginBottom: 6,
+    fontFamily: "UberMoveText-Medium",
+  },
+
+  input: {
+    backgroundColor: "#13131A",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#2A2A35",
+    padding: 14,
+    fontSize: 15,
+    color: "#FFF",
+    fontFamily: "UberMoveText-Regular",
+  },
+
+  saveBtn: {
+    backgroundColor: "#246BFD",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+  },
+
+  saveBtnText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontFamily: "UberMove-Bold",
+  },
 });

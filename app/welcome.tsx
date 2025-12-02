@@ -1,191 +1,104 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router, Stack } from 'expo-router'; // Import Stack
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { 
-    KeyboardAvoidingView, 
-    Platform, 
-    ScrollView, 
-    StyleSheet, 
-    Text, 
-    TextInput, 
-    TouchableOpacity, 
-    View, 
+import {
     Image,
     SafeAreaView,
-    Dimensions
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
-const { width } = Dimensions.get('window');
-
-// Dark Theme Palette
 const theme = {
-    background: '#0B0B15',    // Main Dark Background
-    textMain: '#FFFFFF',      // White
-    textSecondary: '#9CA3AF', // Cool Grey
-    accent: '#246BFD',        // AquaLedger Blue
-    surface: '#181822',       // Card/Surface Color
-    inputBg: '#13131A',       // Slightly darker for inputs
-    border: '#2A2A35'         // Border Color
+    background: '#0B0B15',
+    textMain: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    accent: '#246BFD',
+    surface: '#181822',
+    border: '#2A2A35',
 };
 
-export default function SignUp() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [agreed, setAgreed] = useState(false);
+const highlights = [
+    {
+        title: 'Smart Tracking',
+        subtitle: 'Monitor every boat, lot, and payout in real time.',
+    },
+    {
+        title: 'Actionable Insights',
+        subtitle: 'Understand revenue, commission, and goals at a glance.',
+    },
+    {
+        title: 'Crew Collaboration',
+        subtitle: 'Keep everyone aligned with updates that matter.',
+    },
+];
 
-    const handleSignUp = () => {
-        if (!email || !password) {
-            alert("Please fill in all fields");
-            return;
-        }
-        router.replace('/(tabs)');
-    };
-
+export default function Welcome() {
     return (
         <SafeAreaView style={styles.container}>
-            {/* 1. Hide the Default Header */}
             <Stack.Screen options={{ headerShown: false }} />
-            
             <StatusBar style="light" />
-            
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
-            >
-                <ScrollView 
-                    contentContainerStyle={styles.contentContainer}
-                    showsVerticalScrollIndicator={false}
-                >
-                    {/* Header: Back Arrow */}
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <Ionicons name="arrow-back" size={24} color="#FFF" />
-                        </TouchableOpacity>
+
+            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                <View style={styles.hero}>
+                    <View style={styles.imageWrapper}>
+                        <Image
+                            source={{
+                                uri: 'https://cdn.dribbble.com/userupload/41849246/file/original-942c6a9ffac280bfc04190f0a60f3771.png',
+                            }}
+                            style={styles.heroImage}
+                        />
+                        <View style={styles.ringPrimary} />
+                        <View style={styles.ringSecondary} />
                     </View>
+<Text style={styles.kicker}>Welcome to Aqua Ledger</Text>
 
-                    {/* Illustration Area */}
-                    <View style={styles.illustrationContainer}>
-                        <View style={styles.circleContainer}>
-                            <Image 
-                                source={{ uri: 'https://cdn.dribbble.com/userupload/41849246/file/original-942c6a9ffac280bfc04190f0a60f3771.png?resize=800x600&vertical=center' }}
-                                style={styles.illustration}
-                                resizeMode="cover"
-                            />
-                            <View style={styles.ring1} />
-                            <View style={styles.ring2} />
-                        </View>
-                        <Text style={styles.mainTitle}>Create Account</Text>
-                        <Text style={styles.subtitle}>Join us to manage your fleet efficiently.</Text>
-                    </View>
+<Text style={styles.title}>Your auction ledger, fully under control.</Text>
 
-                    {/* Form Fields */}
-                    <View style={styles.formContainer}>
-                        
-                        {/* Name Input */}
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Your Name</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="e.g. Lucy"
-                                placeholderTextColor="#666"
-                                value={name}
-                                onChangeText={setName}
-                                autoCapitalize="words"
-                            />
-                        </View>
+<Text style={styles.subtitle}>
+Create lots, track commissions, and manage settlements with a modern,
+transparent ledger built for coastal fish auctions.
+</Text>
 
-                        {/* Email Input */}
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Your Email Address</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="divyesh.b@gmail.com"
-                                placeholderTextColor="#666"
-                                value={email}
-                                onChangeText={setEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                            />
-                        </View>
+                </View>
 
-                        {/* Password Input */}
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Choose a Password</Text>
-                            <View style={styles.passwordContainer}>
-                                <TextInput
-                                    style={styles.passwordInput}
-                                    placeholder="min. 8 characters"
-                                    placeholderTextColor="#666"
-                                    secureTextEntry={!showPassword}
-                                    value={password}
-                                    onChangeText={setPassword}
-                                />
-                                <TouchableOpacity 
-                                    onPress={() => setShowPassword(!showPassword)}
-                                    style={styles.eyeIcon}
-                                >
-                                    <Ionicons 
-                                        name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                                        size={20} 
-                                        color="#AAA" 
-                                    />
-                                </TouchableOpacity>
+                <View style={styles.card}>
+                    {highlights.map((item) => (
+                        <View key={item.title} style={styles.highlightRow}>
+                            <View style={styles.bullet} />
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.highlightTitle}>{item.title}</Text>
+                                <Text style={styles.highlightSubtitle}>{item.subtitle}</Text>
                             </View>
                         </View>
+                    ))}
+                </View>
 
-                        {/* Terms of Use Checkbox */}
-                        <View style={styles.termsContainer}>
-                            <TouchableOpacity 
-                                onPress={() => setAgreed(!agreed)}
-                                style={[styles.checkbox, agreed && styles.checkboxChecked]}
-                            >
-                                {agreed && <Ionicons name="checkmark" size={14} color="#FFF" />}
-                            </TouchableOpacity>
-                            <Text style={styles.termsText}>
-                                I agree with <Text style={styles.linkText}>Terms of Use</Text> & <Text style={styles.linkText}>Privacy Policy</Text>
-                            </Text>
-                        </View>
+                <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={() => router.push('/login')}
+                    activeOpacity={0.85}
+                >
+                    <Text style={styles.primaryText}>Get Started</Text>
+                </TouchableOpacity>
 
-                        {/* Sign Up Button */}
-                        <TouchableOpacity 
-                            style={styles.signUpButton} 
-                            onPress={handleSignUp}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.signUpButtonText}>Sign up</Text>
-                        </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={() => router.push('/signup')}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.secondaryText}>Create a free account</Text>
+                </TouchableOpacity>
 
-                        {/* Divider */}
-                        <View style={styles.dividerContainer}>
-                            <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>OR</Text>
-                            <View style={styles.dividerLine} />
-                        </View>
-
-                        {/* Google Sign Up Button */}
-                        <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
-                            <Image 
-                                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png' }}
-                                style={styles.googleIcon}
-                                resizeMode="contain"
-                            />
-                            <Text style={styles.googleButtonText}>Sign up with Google</Text>
-                        </TouchableOpacity>
-
-                        {/* Footer */}
-                        <View style={styles.footer}>
-                            <Text style={styles.footerText}>Already have an account? </Text>
-                            <TouchableOpacity onPress={() => router.push('/login')}>
-                                <Text style={styles.signInText}>Log in</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                <TouchableOpacity
+                    onPress={() => router.replace('/(tabs)')}
+                    style={styles.skipButton}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.skipText}>Skip for now</Text>
+                </TouchableOpacity>
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -195,240 +108,140 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: theme.background,
     },
-    keyboardView: {
-        flex: 1,
-    },
-    contentContainer: {
+    content: {
         flexGrow: 1,
         paddingHorizontal: 24,
-        paddingTop: 10,
-        paddingBottom: 30,
+        paddingBottom: 40,
+        paddingTop: 40,
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
+    hero: {
         alignItems: 'center',
-        marginBottom: 10,
-        marginTop: 10,
+        marginBottom: 32,
     },
-    backButton: {
-        padding: 8,
-        marginLeft: -8,
-        backgroundColor: theme.surface,
-        borderRadius: 20,
+    imageWrapper: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
         borderWidth: 1,
         borderColor: theme.border,
-    },
-    
-    // Illustration
-    illustrationContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 30,
-    },
-    circleContainer: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
         backgroundColor: theme.surface,
+        justifyContent: 'center',
+        alignItems: 'center',
         overflow: 'hidden',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: theme.border,
-        marginBottom: 20,
-        zIndex: 5,
+        marginBottom: 24,
     },
-    illustration: {
+    heroImage: {
         width: '100%',
         height: '100%',
     },
-    ring1: {
+    ringPrimary: {
         position: 'absolute',
-        width: '125%',
-        height: '125%',
-        borderRadius: 999,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
         borderWidth: 1,
-        borderColor: 'rgba(36, 107, 253, 0.1)',
-        zIndex: -1,
+        borderColor: 'rgba(36,107,253,0.12)',
     },
-    ring2: {
+    ringSecondary: {
         position: 'absolute',
-        width: '150%',
-        height: '150%',
-        borderRadius: 999,
+        width: 210,
+        height: 210,
+        borderRadius: 105,
         borderWidth: 1,
-        borderColor: 'rgba(36, 107, 253, 0.05)',
-        zIndex: -2,
+        borderColor: 'rgba(36,107,253,0.06)',
     },
-    mainTitle: {
-        fontSize: 24,
-        fontWeight: '700',
+    kicker: {
+        fontSize: 13,
+        letterSpacing: 1,
+        color: theme.textSecondary,
+        textTransform: 'uppercase',
+        fontFamily: 'UberMoveText-Medium',
+    },
+    title: {
+        fontSize: 30,
         color: theme.textMain,
-        marginBottom: 6,
+        textAlign: 'center',
+        marginTop: 12,
+        fontFamily: 'UberMove-Bold',
     },
     subtitle: {
-        fontSize: 14,
+        fontSize: 15,
         color: theme.textSecondary,
-        fontWeight: '400',
+        textAlign: 'center',
+        marginTop: 12,
+        fontFamily: 'UberMoveText-Regular',
+        lineHeight: 22,
     },
-
-    // Form
-    formContainer: {
-        flex: 1,
-        marginTop: 10,
-    },
-    inputGroup: {
-        marginBottom: 16,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: theme.textSecondary,
-        marginBottom: 8,
-    },
-    input: {
-        height: 52,
+    card: {
+        backgroundColor: theme.surface,
+        borderRadius: 24,
+        padding: 20,
         borderWidth: 1,
         borderColor: theme.border,
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        fontSize: 15,
-        color: theme.textMain,
-        backgroundColor: theme.inputBg,
+        marginBottom: 28,
     },
-    passwordContainer: {
-        height: 52,
-        borderWidth: 1,
-        borderColor: theme.border,
-        borderRadius: 12,
+    highlightRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: theme.inputBg,
+        gap: 14,
+        marginBottom: 18,
+        alignItems: 'flex-start',
     },
-    passwordInput: {
-        flex: 1,
-        height: '100%',
-        paddingHorizontal: 16,
-        fontSize: 15,
-        color: theme.textMain,
-    },
-    eyeIcon: {
-        padding: 10,
-        marginRight: 6,
-    },
-    
-    // Terms
-    termsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 4,
-        marginBottom: 24,
-    },
-    checkbox: {
-        width: 24,
-        height: 24,
-        borderWidth: 2,
-        borderColor: theme.border,
-        borderRadius: 6,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: theme.inputBg,
-        marginRight: 12,
-    },
-    checkboxChecked: {
+    bullet: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         backgroundColor: theme.accent,
-        borderColor: theme.accent,
+        marginTop: 6,
     },
-    termsText: {
-        fontSize: 13,
+    highlightTitle: {
+        color: theme.textMain,
+        fontSize: 16,
+        fontFamily: 'UberMoveText-Medium',
+    },
+    highlightSubtitle: {
         color: theme.textSecondary,
-        flex: 1,
+        fontSize: 13,
+        fontFamily: 'UberMoveText-Regular',
+        marginTop: 4,
         lineHeight: 20,
     },
-    linkText: {
-        color: theme.accent,
-        fontWeight: '600',
-    },
-
-    // Buttons
-    signUpButton: {
+    primaryButton: {
+        height: 56,
+        borderRadius: 18,
         backgroundColor: theme.accent,
-        height: 56,
-        borderRadius: 16,
-        alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 20,
-        shadowColor: theme.accent,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 8,
+        alignItems: 'center',
+        marginBottom: 16,
     },
-    signUpButtonText: {
-        color: '#FFFFFF',
+    primaryText: {
+        color: '#FFF',
         fontSize: 16,
-        fontWeight: '700',
-        letterSpacing: 0.5,
+        fontFamily: 'UberMove-Bold',
     },
-    
-    // Divider
-    dividerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    dividerLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: theme.border,
-    },
-    dividerText: {
-        fontSize: 12,
-        color: theme.textSecondary,
-        fontWeight: '600',
-        marginHorizontal: 16,
-    },
-
-    // Google Button
-    googleButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 56,
+    secondaryButton: {
+        height: 54,
+        borderRadius: 16,
         borderWidth: 1,
         borderColor: theme.border,
-        borderRadius: 16,
-        backgroundColor: theme.surface,
-        marginBottom: 24,
-    },
-    googleIcon: {
-        width: 20,
-        height: 20,
-        marginRight: 10,
-    },
-    googleButtonText: {
-        color: theme.textMain,
-        fontSize: 15,
-        fontWeight: '600',
-    },
-    
-    // Footer
-    footer: {
-        flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
+        backgroundColor: '#11111A',
+        marginBottom: 12,
     },
-    footerText: {
+    secondaryText: {
+        color: theme.textMain,
+        fontSize: 15,
+        fontFamily: 'UberMoveText-Medium',
+    },
+    skipButton: {
+        alignSelf: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+    },
+    skipText: {
         color: theme.textSecondary,
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    signInText: {
-        color: theme.textMain, 
-        fontSize: 14,
-        fontWeight: '700',
+        fontSize: 13,
+        fontFamily: 'UberMoveText-Regular',
         textDecorationLine: 'underline',
     },
 });
