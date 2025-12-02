@@ -2,31 +2,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { 
-    KeyboardAvoidingView, 
-    Platform, 
-    ScrollView, 
-    StyleSheet, 
-    Text, 
-    TextInput, 
-    TouchableOpacity, 
-    View, 
+import {
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
     Image,
     SafeAreaView,
-    Dimensions
 } from 'react-native';
-
-const { width } = Dimensions.get('window');
+const dp = require('../assets/images/dp.png');
 
 // Dark Theme Palette
 const theme = {
-    background: '#0B0B15',    // Main Dark Background
-    textMain: '#FFFFFF',      // White
-    textSecondary: '#9CA3AF', // Cool Grey
-    accent: '#246BFD',        // AquaLedger Blue
-    surface: '#181822',       // Card/Surface Color
-    inputBg: '#13131A',       // Slightly darker for inputs
-    border: '#2A2A35'         // Border Color
+    background: '#0B0B15',
+    textMain: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    accent: '#246BFD',
+    surface: '#181822',
+    inputBg: '#13131A',
+    border: '#2A2A35',
 };
 
 export default function SignUp() {
@@ -37,81 +35,85 @@ export default function SignUp() {
     const [agreed, setAgreed] = useState(false);
 
     const handleSignUp = () => {
-        if (!email || !password) {
-            alert("Please fill in all fields");
+        if (!email || !password || !name) {
+            alert('Please fill all fields');
             return;
         }
+
         router.replace('/(tabs)');
     };
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar style="light" />
-            
+
             <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
             >
-                <ScrollView 
-                    contentContainerStyle={styles.contentContainer}
+                <ScrollView
+                    contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Header: Back Arrow */}
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <Ionicons name="arrow-back" size={24} color="#FFF" />
+                    {/* BACK BUTTON */}
+                    <View style={styles.headerRow}>
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={styles.backButton}
+                        >
+                            <Ionicons name="arrow-back" size={22} color="#FFF" />
                         </TouchableOpacity>
                     </View>
 
-                    {/* Illustration Area */}
-                    <View style={styles.illustrationContainer}>
-                        <View style={styles.circleContainer}>
-                            <Image 
-                                source={{ uri: 'https://cdn.dribbble.com/userupload/41849246/file/original-942c6a9ffac280bfc04190f0a60f3771.png?resize=800x600&vertical=center' }}
-                                style={styles.illustration}
-                                resizeMode="cover"
-                            />
-                            <View style={styles.ring1} />
-                            <View style={styles.ring2} />
+                    {/* ILLUSTRATION */}
+                    <View style={styles.illustrationWrapper}>
+                        <View style={styles.avatarContainer}>
+                            <Image source={dp} style={styles.avatar} />
                         </View>
+
+                        <View style={styles.ring1} />
+                        <View style={styles.ring2} />
+
                         <Text style={styles.mainTitle}>Create Account</Text>
-                        <Text style={styles.subtitle}>Join us to manage your fleet efficiently.</Text>
+                        <Text style={styles.subtitle}>
+                            Join us to manage your fleet efficiently.
+                        </Text>
                     </View>
 
-                    {/* Form Fields */}
-                    <View style={styles.formContainer}>
-                        
-                        {/* Name Input */}
+                    {/* FORM */}
+                    <View style={styles.form}>
+                        {/* NAME */}
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Your Name</Text>
                             <TextInput
                                 style={styles.input}
                                 placeholder="e.g. Lucy"
                                 placeholderTextColor="#666"
+                                autoCapitalize="words"
                                 value={name}
                                 onChangeText={setName}
-                                autoCapitalize="words"
                             />
                         </View>
 
-                        {/* Email Input */}
+                        {/* EMAIL */}
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Your Email Address</Text>
                             <TextInput
                                 style={styles.input}
                                 placeholder="divyesh.b@gmail.com"
                                 placeholderTextColor="#666"
+                                keyboardType="email-address"
+                                autoCapitalize="none"
                                 value={email}
                                 onChangeText={setEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
                             />
                         </View>
 
-                        {/* Password Input */}
+                        {/* PASSWORD */}
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Choose a Password</Text>
-                            <View style={styles.passwordContainer}>
+
+                            <View style={styles.passwordRow}>
                                 <TextInput
                                     style={styles.passwordInput}
                                     placeholder="min. 8 characters"
@@ -120,66 +122,83 @@ export default function SignUp() {
                                     value={password}
                                     onChangeText={setPassword}
                                 />
-                                <TouchableOpacity 
+
+                                <TouchableOpacity
                                     onPress={() => setShowPassword(!showPassword)}
-                                    style={styles.eyeIcon}
+                                    style={styles.eyeButton}
                                 >
-                                    <Ionicons 
-                                        name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                                        size={20} 
-                                        color="#AAA" 
+                                    <Ionicons
+                                        name={
+                                            showPassword
+                                                ? 'eye-off-outline'
+                                                : 'eye-outline'
+                                        }
+                                        size={20}
+                                        color="#AAA"
                                     />
                                 </TouchableOpacity>
                             </View>
                         </View>
 
-                        {/* Terms of Use Checkbox */}
-                        <View style={styles.termsContainer}>
-                            <TouchableOpacity 
+                        {/* TERMS */}
+                        <View style={styles.termsRow}>
+                            <TouchableOpacity
                                 onPress={() => setAgreed(!agreed)}
                                 style={[styles.checkbox, agreed && styles.checkboxChecked]}
                             >
-                                {agreed && <Ionicons name="checkmark" size={14} color="#FFF" />}
+                                {agreed && (
+                                    <Ionicons name="checkmark" size={14} color="#FFF" />
+                                )}
                             </TouchableOpacity>
+
                             <Text style={styles.termsText}>
-                                I agree with <Text style={styles.linkText}>Terms of Use</Text> & <Text style={styles.linkText}>Privacy Policy</Text>
+                                I agree with{' '}
+                                <Text style={styles.link}>Terms of Use</Text> &{' '}
+                                <Text style={styles.link}>Privacy Policy</Text>
                             </Text>
                         </View>
 
-                        {/* Sign Up Button */}
-                        <TouchableOpacity 
-                            style={styles.signUpButton} 
+                        {/* SIGN UP BUTTON */}
+                        <TouchableOpacity
+                            style={styles.signUpButton}
                             onPress={handleSignUp}
-                            activeOpacity={0.8}
+                            activeOpacity={0.85}
                         >
-                            <Text style={styles.signUpButtonText}>Sign up</Text>
+                            <Text style={styles.signUpText}>Sign up</Text>
                         </TouchableOpacity>
 
-                        {/* Divider */}
-                        <View style={styles.dividerContainer}>
-                            <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>OR</Text>
-                            <View style={styles.dividerLine} />
+                        {/* DIVIDER */}
+                        <View style={styles.dividerRow}>
+                            <View style={styles.line} />
+                            <Text style={styles.dividerLabel}>OR</Text>
+                            <View style={styles.line} />
                         </View>
 
-                        {/* Google Sign Up Button */}
-                        <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
-                            <Image 
-                                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png' }}
+                        {/* GOOGLE BUTTON */}
+                        <TouchableOpacity
+                            style={styles.googleButton}
+                            activeOpacity={0.85}
+                        >
+                            <Image
+                                source={{
+                                    uri:
+                                        'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
+                                }}
                                 style={styles.googleIcon}
-                                resizeMode="contain"
                             />
-                            <Text style={styles.googleButtonText}>Sign up with Google</Text>
+
+                            <Text style={styles.googleText}>Sign up with Google</Text>
                         </TouchableOpacity>
 
-                        {/* Footer */}
-                        <View style={styles.footer}>
-                            <Text style={styles.footerText}>Already have an account? </Text>
+                        {/* FOOTER */}
+                        <View style={styles.footerRow}>
+                            <Text style={styles.footerText}>
+                                Already have an account?
+                            </Text>
                             <TouchableOpacity onPress={() => router.push('/login')}>
-                                <Text style={styles.signInText}>Log in</Text>
+                                <Text style={styles.loginLink}> Log in</Text>
                             </TouchableOpacity>
                         </View>
-
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -187,245 +206,252 @@ export default function SignUp() {
     );
 }
 
+// -----------------------------------------------------------------------------
+// FONTS UPDATED: UberMove-Bold + UberMoveText Regular/Medium everywhere
+// -----------------------------------------------------------------------------
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background,
     },
-    keyboardView: {
-        flex: 1,
-    },
-    contentContainer: {
+
+    content: {
         flexGrow: 1,
         paddingHorizontal: 24,
-        paddingTop: 10,
-        paddingBottom: 30,
+        paddingBottom: 40,
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        marginBottom: 10,
-        marginTop: 10,
+
+    headerRow: {
+        marginTop: 12,
+        marginBottom: 12,
     },
+
     backButton: {
-        padding: 8,
-        marginLeft: -8,
+        padding: 10,
         backgroundColor: theme.surface,
         borderRadius: 20,
         borderWidth: 1,
         borderColor: theme.border,
     },
-    
-    // Illustration
-    illustrationContainer: {
+
+    // ILLUSTRATION
+    illustrationWrapper: {
         alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 30,
+        marginBottom: 28,
+        marginTop: 10,
     },
-    circleContainer: {
+
+    avatarContainer: {
         width: 120,
         height: 120,
         borderRadius: 60,
         backgroundColor: theme.surface,
-        overflow: 'hidden',
-        justifyContent: 'center',
-        alignItems: 'center',
         borderWidth: 1,
         borderColor: theme.border,
-        marginBottom: 20,
-        zIndex: 5,
+        overflow: 'hidden',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
     },
-    illustration: {
-        width: '100%',
-        height: '100%',
-    },
+
+    avatar: { width: '100%', height: '100%' },
+
     ring1: {
         position: 'absolute',
-        width: '125%',
-        height: '125%',
-        borderRadius: 999,
+        width: 150,
+        height: 150,
+        borderRadius: 75,
         borderWidth: 1,
-        borderColor: 'rgba(36, 107, 253, 0.1)',
-        zIndex: -1,
+        borderColor: 'rgba(36,107,253,0.08)',
     },
+
     ring2: {
         position: 'absolute',
-        width: '150%',
-        height: '150%',
-        borderRadius: 999,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
         borderWidth: 1,
-        borderColor: 'rgba(36, 107, 253, 0.05)',
-        zIndex: -2,
+        borderColor: 'rgba(36,107,253,0.05)',
     },
+
     mainTitle: {
-        fontSize: 24,
-        fontWeight: '700',
+        fontSize: 26,
         color: theme.textMain,
-        marginBottom: 6,
+        marginTop: 25,
+        fontFamily: 'UberMove-Bold',
     },
+
     subtitle: {
         fontSize: 14,
         color: theme.textSecondary,
-        fontWeight: '400',
+        marginTop: 6,
+        textAlign: 'center',
+        fontFamily: 'UberMoveText-Regular',
+        paddingHorizontal: 12,
     },
 
-    // Form
-    formContainer: {
+    // FORM
+    form: {
         flex: 1,
-        marginTop: 10,
     },
-    inputGroup: {
-        marginBottom: 16,
-    },
+
+    inputGroup: { marginBottom: 20 },
+
     label: {
-        fontSize: 14,
-        fontWeight: '600',
         color: theme.textSecondary,
         marginBottom: 8,
+        fontSize: 14,
+        fontFamily: 'UberMoveText-Medium',
     },
+
     input: {
         height: 52,
-        borderWidth: 1,
+        backgroundColor: theme.inputBg,
         borderColor: theme.border,
+        borderWidth: 1,
         borderRadius: 12,
         paddingHorizontal: 16,
         fontSize: 15,
         color: theme.textMain,
-        backgroundColor: theme.inputBg,
+        fontFamily: 'UberMoveText-Regular',
     },
-    passwordContainer: {
+
+    passwordRow: {
         height: 52,
-        borderWidth: 1,
+        backgroundColor: theme.inputBg,
         borderColor: theme.border,
+        borderWidth: 1,
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.inputBg,
     },
+
     passwordInput: {
         flex: 1,
-        height: '100%',
         paddingHorizontal: 16,
         fontSize: 15,
         color: theme.textMain,
+        fontFamily: 'UberMoveText-Regular',
     },
-    eyeIcon: {
-        padding: 10,
-        marginRight: 6,
-    },
-    
-    // Terms
-    termsContainer: {
+
+    eyeButton: { padding: 10, marginRight: 6 },
+
+    // TERMS
+    termsRow: {
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 4,
         marginBottom: 24,
     },
+
     checkbox: {
         width: 24,
         height: 24,
         borderWidth: 2,
         borderColor: theme.border,
+        backgroundColor: theme.inputBg,
         borderRadius: 6,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: theme.inputBg,
         marginRight: 12,
     },
+
     checkboxChecked: {
         backgroundColor: theme.accent,
         borderColor: theme.accent,
     },
+
     termsText: {
-        fontSize: 13,
         color: theme.textSecondary,
-        flex: 1,
+        fontSize: 13,
         lineHeight: 20,
-    },
-    linkText: {
-        color: theme.accent,
-        fontWeight: '600',
+        fontFamily: 'UberMoveText-Regular',
+        flex: 1,
     },
 
-    // Buttons
+    link: {
+        color: theme.accent,
+        fontFamily: 'UberMoveText-Medium',
+    },
+
+    // BUTTONS
     signUpButton: {
-        backgroundColor: theme.accent,
         height: 56,
+        backgroundColor: theme.accent,
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 20,
-        shadowColor: theme.accent,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 8,
+        marginBottom: 24,
     },
-    signUpButtonText: {
-        color: '#FFFFFF',
+
+    signUpText: {
+        color: '#FFF',
         fontSize: 16,
-        fontWeight: '700',
-        letterSpacing: 0.5,
+        fontFamily: 'UberMove-Bold',
     },
-    
-    // Divider
-    dividerContainer: {
+
+    // DIVIDER
+    dividerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 24,
     },
-    dividerLine: {
+
+    line: {
         flex: 1,
         height: 1,
         backgroundColor: theme.border,
     },
-    dividerText: {
-        fontSize: 12,
+
+    dividerLabel: {
         color: theme.textSecondary,
-        fontWeight: '600',
-        marginHorizontal: 16,
+        fontFamily: 'UberMoveText-Medium',
+        fontSize: 12,
+        marginHorizontal: 12,
     },
 
-    // Google Button
+    // GOOGLE BUTTON
     googleButton: {
         flexDirection: 'row',
+        height: 56,
         alignItems: 'center',
         justifyContent: 'center',
-        height: 56,
-        borderWidth: 1,
-        borderColor: theme.border,
         borderRadius: 16,
         backgroundColor: theme.surface,
+        borderWidth: 1,
+        borderColor: theme.border,
         marginBottom: 24,
     },
+
     googleIcon: {
-        width: 20,
-        height: 20,
+        width: 22,
+        height: 22,
         marginRight: 10,
     },
-    googleButtonText: {
+
+    googleText: {
         color: theme.textMain,
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: 'UberMoveText-Medium',
     },
-    
-    // Footer
-    footer: {
+
+    // FOOTER
+    footerRow: {
         flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 10,
     },
+
     footerText: {
         color: theme.textSecondary,
         fontSize: 14,
-        fontWeight: '500',
+        fontFamily: 'UberMoveText-Regular',
     },
-    signInText: {
-        color: theme.textMain, 
+
+    loginLink: {
+        color: theme.textMain,
         fontSize: 14,
-        fontWeight: '700',
+        fontFamily: 'UberMoveText-Medium',
         textDecorationLine: 'underline',
     },
 });

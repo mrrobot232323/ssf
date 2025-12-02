@@ -2,31 +2,32 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { 
-    KeyboardAvoidingView, 
-    Platform, 
-    ScrollView, 
-    StyleSheet, 
-    Text, 
-    TextInput, 
-    TouchableOpacity, 
-    View, 
+import {
+    Dimensions,
     Image,
+    KeyboardAvoidingView,
+    Platform,
     SafeAreaView,
-    Dimensions
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
+const dp = require('../assets/images/dp.png');
 
 const { width } = Dimensions.get('window');
 
 // Dark Theme Palette
 const theme = {
-    background: '#0B0B15',    // Main Dark Background
-    textMain: '#FFFFFF',      // White
-    textSecondary: '#9CA3AF', // Cool Grey
-    accent: '#246BFD',        // AquaLedger Blue
-    surface: '#181822',       // Card/Surface Color
-    inputBg: '#13131A',       // Slightly darker for inputs
-    border: '#2A2A35'         // Border Color
+    background: '#0B0B15',
+    textMain: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    accent: '#246BFD',
+    surface: '#181822',
+    inputBg: '#13131A',
+    border: '#2A2A35'
 };
 
 export default function Login() {
@@ -42,42 +43,44 @@ export default function Login() {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar style="light" />
-            
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
+                style={{ flex: 1 }}
             >
-                <ScrollView 
-                    contentContainerStyle={styles.contentContainer}
+                <ScrollView
+                    contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Header: Back Arrow Only */}
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <Ionicons name="arrow-back" size={24} color="#FFF" />
+                    {/* Back Button Header */}
+                    <View style={styles.headerRow}>
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={styles.backButton}
+                        >
+                            <Ionicons name="arrow-back" size={22} color="#FFF" />
                         </TouchableOpacity>
                     </View>
 
-                    {/* Illustration Area */}
-                    <View style={styles.illustrationContainer}>
-                        <View style={styles.circleContainer}>
-                            <Image 
-                                source={{ uri: 'https://cdn.dribbble.com/userupload/41849246/file/original-942c6a9ffac280bfc04190f0a60f3771.png?resize=800x600&vertical=center' }}
-                                style={styles.illustration}
-                                resizeMode="cover"
-                            />
-                            {/* Decorative Rings */}
-                            <View style={styles.ring1} />
-                            <View style={styles.ring2} />
+                    {/* Avatar Illustration */}
+                    <View style={styles.illustrationWrapper}>
+                        <View style={styles.avatarContainer}>
+                            <Image source={dp} style={styles.avatar} />
                         </View>
-                        <Text style={styles.titleText}>Welcome Back!</Text>
-                        <Text style={styles.subtitleText}>Please log in to continue managing your fleet.</Text>
+
+                        <View style={styles.ring1} />
+                        <View style={styles.ring2} />
+
+                        <Text style={styles.title}>Welcome Back!</Text>
+                        <Text style={styles.subtitle}>
+                            Please log in to continue managing your fleet.
+                        </Text>
                     </View>
 
-                    {/* Form Section */}
-                    <View style={styles.formContainer}>
-                        
-                        {/* Email Input */}
+                    {/* Form Area */}
+                    <View style={styles.formSection}>
+
+                        {/* Email */}
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Email Address</Text>
                             <TextInput
@@ -91,10 +94,11 @@ export default function Login() {
                             />
                         </View>
 
-                        {/* Password Input */}
+                        {/* Password */}
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Password</Text>
-                            <View style={styles.passwordContainer}>
+
+                            <View style={styles.passwordRow}>
                                 <TextInput
                                     style={styles.passwordInput}
                                     placeholder="● ● ● ● ● ● ● ●"
@@ -103,266 +107,276 @@ export default function Login() {
                                     value={password}
                                     onChangeText={setPassword}
                                 />
-                                <TouchableOpacity 
+
+                                <TouchableOpacity
                                     onPress={() => setShowPassword(!showPassword)}
-                                    style={styles.eyeIcon}
+                                    style={styles.eyeButton}
                                 >
-                                    <Ionicons 
-                                        name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                                        size={20} 
-                                        color="#AAA" 
+                                    <Ionicons
+                                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                                        size={20}
+                                        color="#AAA"
                                     />
                                 </TouchableOpacity>
                             </View>
-                            
-                            {/* Forgot Password */}
-                            <TouchableOpacity style={styles.forgotPasswordContainer}>
-                                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+
+                            <TouchableOpacity style={styles.forgotWrapper}>
+                                <Text style={styles.forgotText}>Forgot Password?</Text>
                             </TouchableOpacity>
                         </View>
 
-                        {/* Remember Me Row */}
-                        <View style={styles.rememberMeContainer}>
-                            <Text style={styles.rememberMeText}>Remember me next time</Text>
-                            <TouchableOpacity 
+                        {/* Remember Me */}
+                        <View style={styles.rememberRow}>
+                            <Text style={styles.rememberText}>Remember me next time</Text>
+
+                            <TouchableOpacity
+                                style={[styles.checkbox, rememberMe && styles.checkboxActive]}
                                 onPress={() => setRememberMe(!rememberMe)}
-                                style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
                             >
-                                {rememberMe && <Ionicons name="checkmark" size={14} color="#FFF" />}
+                                {rememberMe && (
+                                    <Ionicons name="checkmark" size={14} color="#FFF" />
+                                )}
                             </TouchableOpacity>
                         </View>
 
                         {/* Login Button */}
-                        <TouchableOpacity 
-                            style={styles.loginButton} 
+                        <TouchableOpacity
+                            style={styles.loginButton}
                             onPress={handleLogin}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.loginButtonText}>Log in</Text>
+                            <Text style={styles.loginText}>Log in</Text>
                         </TouchableOpacity>
 
                         {/* Footer */}
-                        <View style={styles.footer}>
-                            <Text style={styles.footerText}>Don't have an account? </Text>
+                        <View style={styles.footerRow}>
+                            <Text style={styles.footerText}>
+                                Don't have an account?
+                            </Text>
+
                             <TouchableOpacity onPress={() => router.push('/signup')}>
-                                <Text style={styles.signUpText}>Sign up</Text>
+                                <Text style={styles.signupText}> Sign up</Text>
                             </TouchableOpacity>
                         </View>
-
                     </View>
+
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
 
+// -----------------------------------------------------------------------------
+// Styles — Updated with UberMove + UberMoveText
+// -----------------------------------------------------------------------------
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: theme.background,
+        backgroundColor: theme.background
     },
-    keyboardView: {
-        flex: 1,
-    },
-    contentContainer: {
+
+    content: {
         flexGrow: 1,
         paddingHorizontal: 24,
-        paddingTop: 10,
-        paddingBottom: 30,
+        paddingBottom: 35
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        marginBottom: 10,
-        marginTop: 10,
+
+    headerRow: {
+        flexDirection: "row",
+        marginTop: 12,
+        marginBottom: 10
     },
+
     backButton: {
-        padding: 8,
-        marginLeft: -8,
+        padding: 10,
         backgroundColor: theme.surface,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: theme.border,
+        borderColor: theme.border
     },
-    
-    // Illustration
-    illustrationContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 30,
+
+    // Illustration Section
+    illustrationWrapper: {
+        alignItems: "center",
+        marginTop: 10,
+        marginBottom: 30
     },
-    circleContainer: {
+
+    avatarContainer: {
         width: 140,
         height: 140,
         borderRadius: 70,
         backgroundColor: theme.surface,
-        overflow: 'hidden',
-        justifyContent: 'center',
-        alignItems: 'center',
+        overflow: "hidden",
+        justifyContent: "center",
+        alignItems: "center",
         borderWidth: 1,
         borderColor: theme.border,
-        zIndex: 5,
-        elevation: 10,
-        shadowColor: theme.accent,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
-        marginBottom: 20,
-    },
-    illustration: {
-        width: '100%',
-        height: '100%',
-    },
-    ring1: {
-        position: 'absolute',
-        width: '120%',
-        height: '120%',
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: 'rgba(36, 107, 253, 0.1)',
-        zIndex: -1,
-    },
-    ring2: {
-        position: 'absolute',
-        width: '145%',
-        height: '145%',
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: 'rgba(36, 107, 253, 0.05)',
-        zIndex: -2,
-    },
-    titleText: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: theme.textMain,
-        marginBottom: 6,
-    },
-    subtitleText: {
-        fontSize: 14,
-        color: theme.textSecondary,
-        textAlign: 'center',
+        zIndex: 10
     },
 
-    // Form
-    formContainer: {
-        flex: 1,
-        marginTop: 10,
+    avatar: {
+        width: "100%",
+        height: "100%"
     },
+
+    ring1: {
+        position: "absolute",
+        width: 170,
+        height: 170,
+        borderRadius: 85,
+        borderWidth: 1,
+        borderColor: "rgba(36,107,253,0.08)"
+    },
+
+    ring2: {
+        position: "absolute",
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        borderWidth: 1,
+        borderColor: "rgba(36,107,253,0.05)"
+    },
+
+    title: {
+        fontSize: 26,
+        fontFamily: "UberMove-Bold",
+        color: theme.textMain,
+        marginTop: 25
+    },
+
+    subtitle: {
+        fontSize: 14,
+        fontFamily: "UberMoveText-Regular",
+        color: theme.textSecondary,
+        marginTop: 6,
+        textAlign: "center",
+        paddingHorizontal: 20
+    },
+
+    // Form Section
+    formSection: {
+        marginTop: 10
+    },
+
     inputGroup: {
-        marginBottom: 20,
+        marginBottom: 22
     },
+
     label: {
         fontSize: 14,
-        fontWeight: '600',
         color: theme.textSecondary,
         marginBottom: 8,
+        fontFamily: "UberMoveText-Medium"
     },
+
     input: {
         height: 52,
         borderWidth: 1,
         borderColor: theme.border,
+        backgroundColor: theme.inputBg,
         borderRadius: 12,
         paddingHorizontal: 16,
-        fontSize: 15,
         color: theme.textMain,
-        backgroundColor: theme.inputBg,
+        fontSize: 15,
+        fontFamily: "UberMoveText-Regular"
     },
-    passwordContainer: {
+
+    passwordRow: {
         height: 52,
         borderWidth: 1,
         borderColor: theme.border,
-        borderRadius: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
         backgroundColor: theme.inputBg,
+        borderRadius: 12,
+        flexDirection: "row",
+        alignItems: "center"
     },
+
     passwordInput: {
         flex: 1,
-        height: '100%',
         paddingHorizontal: 16,
         fontSize: 15,
         color: theme.textMain,
+        fontFamily: "UberMoveText-Regular"
     },
-    eyeIcon: {
+
+    eyeButton: {
         padding: 10,
-        marginRight: 6,
+        marginRight: 8
     },
-    
-    // Forgot Password
-    forgotPasswordContainer: {
-        alignSelf: 'flex-end',
-        marginTop: 12,
+
+    forgotWrapper: {
+        alignSelf: "flex-end",
+        marginTop: 10
     },
-    forgotPasswordText: {
-        fontSize: 13,
+
+    forgotText: {
         color: theme.accent,
-        fontWeight: '600',
+        fontSize: 13,
+        fontFamily: "UberMoveText-Medium"
     },
-    
-    // Remember Me
-    rememberMeContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24,
+
+    rememberRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 24
     },
-    rememberMeText: {
-        fontSize: 14,
+
+    rememberText: {
         color: theme.textMain,
-        fontWeight: '500',
+        fontSize: 14,
+        fontFamily: "UberMoveText-Regular"
     },
+
     checkbox: {
         width: 24,
         height: 24,
         borderWidth: 2,
-        borderColor: theme.border,
         borderRadius: 6,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: theme.inputBg,
+        alignItems: "center",
+        justifyContent: "center",
+        borderColor: theme.border,
+        backgroundColor: theme.inputBg
     },
-    checkboxChecked: {
+
+    checkboxActive: {
         backgroundColor: theme.accent,
-        borderColor: theme.accent,
+        borderColor: theme.accent
     },
-    
-    // Buttons
+
     loginButton: {
-        backgroundColor: theme.accent,
         height: 56,
+        backgroundColor: theme.accent,
         borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 24,
-        shadowColor: theme.accent,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 8,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 26
     },
-    loginButtonText: {
-        color: '#FFFFFF',
+
+    loginText: {
+        color: "#FFF",
         fontSize: 16,
-        fontWeight: '700',
-        letterSpacing: 0.5,
+        fontFamily: "UberMove-Bold",
+        letterSpacing: 0.3
     },
-    
-    // Footer
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
+
+    footerRow: {
+        flexDirection: "row",
+        justifyContent: "center"
     },
+
     footerText: {
+        fontSize: 14,
         color: theme.textSecondary,
-        fontSize: 14,
-        fontWeight: '500',
+        fontFamily: "UberMoveText-Regular"
     },
-    signUpText: {
-        color: theme.textMain, 
+
+    signupText: {
         fontSize: 14,
-        fontWeight: '700',
-        textDecorationLine: 'underline',
-    },
+        color: theme.textMain,
+        fontFamily: "UberMoveText-Medium",
+        textDecorationLine: "underline"
+    }
 });
